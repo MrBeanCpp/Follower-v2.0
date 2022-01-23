@@ -1,0 +1,267 @@
+void Widget::updateWindow()
+{
+    //qDebug() << QTime::currentTime();
+    bool isMove;
+    switch (state) {
+    case MOVE:
+        //qDebug() << "MOVE";
+        //changeSizeSlow(StateSize(MOVE));
+        if (((GetKey(VK_CONTROL) && GetKey('E')) || GetKey(VK_MBUTTON)) && !isOtherFullScreen()) {
+            winPos = QCursor::pos();
+            move(centerToLeftTop(winPos.toPoint()));
+            getFocus();
+        }
+        isMove = moveWindow();
+        if (!isMove && isDownToCursor())
+            setState(STILL);
+        break;
+    case STILL:
+        //qDebug() << "STILL";
+        SwitchToThisWindow(Hwnd,true);
+        //changeSizeSlow(StateSize(STILL));
+        if (GetKey(VK_LBUTTON) || GetKey(VK_SPACE)) {
+            setState(INPUT);
+            //changeSizeSlow(StateSize(INPUT), 2); //加速
+            break;
+        } else if (GetKey(VK_RBUTTON)) {
+            setWindowState(Qt::WindowMinimized);
+            setState(MOVE);
+            break;
+        }
+        if (isCursorInWindow()) break;
+        isMove = moveWindow();
+        if (isMove || !isDownToCursor()) setState(MOVE);
+        break;
+    case INPUT:
+        //qDebug() << "INPUT";
+        //        if(!lineEdit->isVisible()){
+        //            lineEdit->wake();
+        //            changeSizeSlow(StateSize(INPUT));
+        //            lineEdit->setFocus();
+        //        }
+        if ((GetKey(VK_LBUTTON) || GetKey(VK_MBUTTON) || GetKey(VK_RBUTTON)) && !isCursorInWindow()) {
+            //lineEdit->clear();
+            //lineEdit->silent();
+            setState(MOVE);
+            //changeSizeSlow(StateSize(MOVE), 2); //加速
+        } else if ((GetKey(VK_RBUTTON) && isCursorInWindow()) || GetKey(VK_ESCAPE)) {
+            //lineEdit->clear();
+            //lineEdit->silent();
+            setState(STILL);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+//**********************************************************************************
+
+    //    static QTableWidgetItem* dropItem;
+    //    static QString dropPath;
+    //    if (event->type() == QEvent::DragEnter && watched != table) {
+    //        qDebug() << watched;
+    //        QDragEnterEvent* dragevent = static_cast<QDragEnterEvent*>(event);
+    //        if (dragevent->mimeData()->hasUrls()) {
+    //            dragevent->acceptProposedAction();
+    //            dropPath = dragevent->mimeData()->urls().at(0).toLocalFile().replace('/', '\\');
+    //        }
+    //    } else if (event->type() == QEvent::DragMove) {
+    //        QDragMoveEvent* dragevent = static_cast<QDragMoveEvent*>(event);
+    //        QPoint Pos = dragevent->pos() - table->viewport()->pos(); //手动矫正坐标
+    //        dropItem = table->itemAt(Pos);
+    //        table->setCurrentItem(dropItem);
+    //    } else if (event->type() == QEvent::Drop) {
+    //        dropItem->setText(dropPath);
+    //    }
+
+//************************************************************************************
+    //qDebug() << GetAsyncKeyState('D');
+    //qDebug() << GetAsyncKeyState(VK_ESCAPE) << isKeyDown(VK_ESCAPE);//状态在观测时被影响
+    //海森堡不确定性原理
+    //qDebug() << isKeyDown('D');
+
+//************************************************************************************
+bool Widget::moveGuide(QPoint dest, QPointF& pos, qreal limit)
+{
+    const qreal Rate = 2;
+    qreal x = pos.x(), y = pos.y();
+    qreal Dx = dest.x() - x, Dy = dest.y() - y;
+    qreal Dis = sqrt(Dx * Dx + Dy * Dy);
+    qreal dx = 0, dy = 0;
+    QRect rect = geometry();
+    if (Dis > limit && Dis)
+        dx = Dx / Dis, dy = Dy / Dis;
+    //    if ((x - width() / 2 <= 0 && dx < 0) || (x + width() / 2 >= Screen.width() - 1 && dx > 0))
+    //        dx = 0;
+    //    if ((y - height() / 2 <= 0 && dy < 0) || (y + height() / 2 + Task_H >= Screen.height() - 1 && dy > 0))
+    //        dy = 0;
+
+    if (rect.left() <= 0 && dx < 0) //计算相对位移，防止直接计算的奇偶偏差
+        dx = 0, x -= rect.left(); //topLeft.setX(0); //x = width() / 2;
+    else if (rect.right() >= validScreen.right() - 1 && dx > 0)
+        dx = 0, x -= (rect.right() - (validScreen.right() - 1)); //topLeft.setX(Screen.width() - width()); //x = Screen.width() - width() + width() / 2; //统一从左上角计算中心，避免奇偶偏差
+
+    if (rect.top() <= 0 && dy < 0)
+        dy = 0, y -= rect.top(); //topLeft.setY(0); //y = height() / 2;
+    else if (rect.bottom() >= validScreen.bottom() - 1 && dy > 0)
+        dy = 0, y -= (rect.bottom() - (validScreen.bottom() - 1)); //topLeft.setY(Screen.height() - Task_H - height()); //y = Screen.height() - Task_H - height() + height() / 2;
+
+    pos.setX(x + dx * Rate);
+    pos.setY(y + dy * Rate);
+    return dx || dy;
+}
+//*****************************************************************************************
+    //showCmdList();
+    //(this->*innerCmdList.at(0).pfunc)();
+    //ShellExecuteA(0, "open", QString("E:\\视频(New)").toLocal8Bit().constData(), "", "", SW_SHOWNORMAL);
+
+    //    CmdEditor cmdEditor(cmdListPath);
+    //    cmdEditor.exec();
+
+    //QDesktopServices::openUrl(QUrl("https://fanyi.baidu.com/?aldtype=16047#en/zh/Can%20you%20hear%20me"));
+    //qDebug() << QString(" ").simplified().split(' ').size();
+    //    QString str;
+    //    qDebug() << str.at(0);
+    //    qDebug() << str[0];
+    //    qDebug() << str[0];
+    //ShellExecuteA(0, "open", QString("F:\\OBS_Studio_v25.0\\OBS_Studio_25.0rc1_64bit_Green\\bin\\64bit\\obs64.exe").toLocal8Bit().constData(), "", QString("F:\\OBS_Studio_v25.0\\OBS_Studio_25.0rc1_64bit_Green\\bin\\64bit").toLocal8Bit().constData(), SW_SHOWNORMAL);
+    //    QString filename = "F:\\OBS_Studio_v25.0\\OBS_Studio_25.0rc1_64bit_Green\\bin\\64bit\\obs64.exe";
+    //    int pos = filename.lastIndexOf('\\');
+    //    QString dirPath = filename.left(pos);
+    //    qDebug() << dirPath;
+//******************************************************************************************
+void Executor::readCmdList()
+{
+    QFile file(cmdListPath);
+    if (file.open(QFile::ReadWrite | QFile::Text)) {
+        QTextStream text(&file);
+        text.setCodec("UTF-8");
+        cmdList.clear();
+        while (!text.atEnd()) {
+            QString line = text.readLine();
+            QStringList list = line.split("[|;|]");
+            for (QString& cmd : list)
+                cmd = cmd.simplified(); //去除多余空白字符
+            if (list.size() == 2)
+                cmdList.append({ list.at(0), list.at(1), "" });
+            else if (list.size() == 3)
+                cmdList.append({ list.at(0), list.at(1), list.at(2) });
+        }
+        file.close();
+        std::sort(cmdList.begin(), cmdList.end(), [](const Command& a, const Command& b) {
+            return a.code.length() < b.code.length();
+        });
+    }
+}
+//*******************************************************************************************
+void Widget::updateWindow()
+{
+    //qDebug() << QTime::currentTime();
+    bool isMove;
+    switch (state) {
+    case MOVE:
+        //qDebug() << "MOVE";
+        if (((GetKey(VK_CONTROL) && GetKey('E')) || GetKey(VK_MBUTTON)) && teleportMode != OFF) {
+            if (teleportMode == ON || (teleportMode == AUTO && !isOtherFullScreen()))
+                teleport();
+        }
+        isMove = moveWindow();
+        if (!isMove && isDownToCursor())
+            setState(STILL);
+        break;
+    case STILL:
+        //qDebug() << "STILL";
+        //SwitchToThisWindow(Hwnd,true);
+        if (GetKey(VK_LBUTTON) || isKeyDown(VK_SPACE)) {
+            setState(INPUT);
+            break;
+        } else if (GetKey(VK_RBUTTON) || isKeyDown(VK_ESCAPE)) {
+            hide(); //setWindowState(Qt::WindowMinimized);
+            setState(MOVE);
+            break;
+        }
+        if (isCursorInWindow()) break;
+        isMove = moveWindow();
+        if (isMove || !isDownToCursor()) setState(MOVE);
+        break;
+    case INPUT:
+        //qDebug() << "INPUT";
+        if ((isGetMouseButton() || (GetKey(VK_CONTROL) && GetKey('E'))) && !isCursorInWindow() && !lineEdit->hasFocus()) {
+            setState(MOVE);
+        } else if ((GetKey(VK_RBUTTON) && isCursorInWindow()) || isKeyDown(VK_ESCAPE)) {
+            setState(STILL);
+        }
+        break;
+    default:
+        break;
+    }
+}
+//*******************************************************************************************
+//bool Widget::isKeyDown(int vKey, bool onlyFirst) //onlyFirst不适用于鼠标按键
+//{
+//    SHORT keyState = GetAsyncKeyState(vKey);
+//    if (onlyFirst)
+//        return keyState == (SHORT)0x8001; //长按会产生循环，第一次间隔较长
+//    else
+//        return keyState & 0x8000; //判断按下状态
+//}
+//*******************************************************************************************
+//bool NoteEditor::isRepeatDate(const QDateTime& dateTime, const QString& repeatMode)
+//{
+//    int index = RepeatMode.indexOf(repeatMode);
+//    if (index == -1) return false;
+//    QDateTime repeatDate, now = QDateTime::currentDateTime();
+//    if (index == 0)
+//        return dateTime.secsTo(now) == 0;
+//    else if (index == 1)
+//        return dateTime.secsTo(now) % 60 == 0;
+//    else if (index == 2)
+//        return dateTime.secsTo(now) % 3600 == 0;
+//    else if (index == 3)
+//        return dateTime.time().secsTo(now.time()) == 0;
+//    else if (index == 4)
+//        return dateTime.date().day() == now.date().day() && dateTime.time().secsTo(now.time()) == 0;
+//    return false;
+//}
+//********************************************************************************************
+void NoteEditor::checkRemindTime()
+{
+    //    QStringList list;
+    //    for (int i = 0; i < table->rowCount(); i++) {
+    //        if (isRepeatDate(dateTimeEdit(i)->dateTime(), comboBox(i)->currentText())) { //dateTimeEdit(i)->dateTime().secsTo(QDateTime::currentDateTime()) == 0
+    //            QTableWidgetItem* item = table->item(i, 0);
+    //            if (item != nullptr && !isBlank(item->text()))
+    //                list << item->text();
+    //        }
+    //    }
+    //    for (const QString& str : list)
+    //        sys.sysTray->showMessage("Remind Time", str); //短时间连续弹出，系统自动排队
+    //    if (!list.empty()) {
+    //        timer->stop();
+    //        QTimer::singleShot(1000, [=]() { timer->start(); }); //防止连续弹出
+    //    }
+}
+//*********************************************************************************************
+    //    function<void(Executor*)> ff = [](Executor* exe) { exe->editCmd(); };
+    //    function<void(Executor*)> ff2;
+    //    ff2 = &Executor::editCmd;
+    //    QJSEngine myEngine;
+    //    qDebug() << myEngine.evaluate("1/3").toString();
+
+    //    SystemNotify sysTip { HWND(WId()) };
+    //    sysTip.ShowBalloonTip("Msg", "Title");
+//********************************************************************************************
+    //    fileWatcher.addPath(Path::dirPath());
+    //    fileWatcher.addPath(path);
+    //    connect(&fileWatcher, &QFileSystemWatcher::directoryChanged, [=](const QString& Path) {
+    //        Q_UNUSED(Path);
+    //        if (!fileWatcher.files().contains(path) && QFileInfo::exists(path)) { //文件删除或改名后会被移除，需要重新添加
+    //            fileWatcher.addPath(path);
+    //            _hasNote = !isEmpty();
+    //        }
+    //    });
+    //    connect(&fileWatcher, &QFileSystemWatcher::fileChanged, [=](const QString& Path) {
+    //        Q_UNUSED(Path);
+    //        _hasNote = !isEmpty();
+    //    });

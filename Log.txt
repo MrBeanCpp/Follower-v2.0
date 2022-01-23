@@ -1,0 +1,463 @@
+9-16：
+    resize()之后，当焦点在另一窗口上，且按住鼠标左键经过Widget，导致Widget无响应，按键后恢复
+    或 在其他窗口下（不可见状态）遇到鼠标而resize后，进入无响应状态
+    推测：由resize造成，具体原因不明
+    Solution：在(!isActiveWindow)非活动窗口的时候，不进行resize()
+
+9-17:
+    单独SwitchToThisWindow失效，裂开
+    使用SetWindowPos设置顶层再取消，然后SwitchToThisWindow+mouse_event
+    WTF！！！
+    猜测：SwitchToThisWindow 只能再窗口可视时生效（但为什么控制台Follower可以 WTF!!!）
+        某些App可能拒绝释放焦点
+
+9-18：
+    啊 这，明天六级 ，我居然在玩Qt
+    针对Windows无法设置前置活动窗口问题，这是Microsoft的锅，为了不打扰用户
+    解决方案：
+        利用AttachThreadInput函数，连接活动窗口输入
+        //允许线程和进程共享输入队列。连接了线程后，输入焦点、窗口激活、鼠标捕获、键盘状态以及输入队列状态都会进入共享状态。调用这个函数时，会重设键盘状态。
+        此后便可以设置焦点
+
+    INPUT状态下，单击窗口外，不再保持前置，//会导致取得焦点 但不前置 导致setTopWindow-(共享输入)失效
+    有舍有得
+
+    只要我测试完，关得够快，就不会有bug(掩程盗码)
+
+9-20:
+    Windows API不够稳定，改用Qt API，先最小化 再active
+        setWindowState(Qt::WindowMinimized);
+        setWindowState(Qt::WindowActive);
+        activateWindow();
+
+    # ShellExecute在cmd中用变量传命令的时候，要在命令字符开始加上"/c"，不然命令不会执行。
+    例：strCommand = "/c " + "date";
+    ShellExecute(NULL, "open", "cmd", strCommand, NULL, SW_HIDE);
+
+    集成度是优点
+
+9-21:
+    QNetworkreply//不能使用异步事件触发，因为reply可能被deletelater,如先timeout再触发finish事件，造成野指针
+    (参见Qt项目:Translator)
+
+9-22:
+    增加命令解释器(Executor)
+    删除：INPUT模式单击取消后的前置，防止打扰用户
+
+9-25:
+    INPUT模式下方 Label显示模糊匹配命令，自适应大小
+
+9-26:
+    增加command，统一小写
+    增加INPUT状态下的鼠标拖动，以应对INPUT提示过长
+
+9-27:
+    增加STILL与INPUT状态下，滚轮控制音量(硬核按键模拟)
+    优化INPUT状态下Label提示(text()==""时,hide Label)
+    取消INPUT框的keypress事件重写，拆分为textChanged信号与returnPressed信号
+
+    ※修：hide INPUT框后，使其unable，防止截胡鼠标事件导致MOVE失效(直接卡住，让人误以为Timer失效，气煞我也!!!)
+    优：进入INPUT，切换En输入法
+    注：clear()也会触发textChanged
+
+9-28:
+    增加内部指令集(Inner_Command)调用类函数指针
+        动态热加载cmd文件
+    ※ bug：点击任务栏无法检测鼠标点击
+    ※ bug：在极特殊的情况下(在INPUT状态下，点击任务栏，再点击桌面空白处，窗体恢复MOVE状态并停滞(Timer停摆)，鼠标经过窗体可唤醒)
+        在MOVE中使用activateWindow可解决，但增加CPU占用，暂不处理
+        9-30：在changeSizeSlow中加入activateWindow可解决
+
+    修复cmdFile中文不识别问题(QTestStream::setCodec("UTF-8");)统一编码
+    注：shellExecute通过explorer打开文件夹更慢，直接开启即可(作为第二参数)
+
+9-29:
+    健全键盘控制(SPACE启动INPUT，ESC结束INPUT)
+
+9-30:
+    增加电池插电检测，加速动画，但只有点击时才有效果(非常bug)
+    改：断电时，增加step，加速动画
+    改：INPUT动画速率翻倍
+    ※ bug：INPUT状态点击右下角返回桌面，无法闪现
+        在changeSizeSlow中加入activateWindow可解决
+        猜测：当系统窗口前置时(Ctrl+D或任务栏)，窗口非active并失去响应
+    ※ 在QApplication::processEvents()之后才能更新isActiveWindow状态
+    将activateWindow移至伸缩动画前，防止动画后再次弹出
+
+10-1:
+    增加isState()函数，用于确定实际State，防止中间态干扰
+    将activateWindow转移至setState()，减少响应延迟
+    ※ bug：在INPUT状态下，空白处单击，有几率伸缩后错误前置(activateWindow)
+        10-2:solved
+
+    取消toLower()，直接在indexOf中改用Qt::CaseInsensitive
+
+    增加自动修改English输入法
+    ※ 由executor持有InputMethod对象，而非Widget，通过CodeEditor层层封装传递给Widget，由内而外
+        因为：executor要启动InputMethod文件，难以直接从Widget取得控制权
+            而且executor作为执行者，持有较多资源较为合理
+
+    封装ShellExecute
+
+10-2:
+    ※ 将activeWindow改为SwitchToThisWindow可解决错误前置问题，并激活窗体，防止无响应
+        但TextEditor还是被覆盖
+        √ 改用 SetActiveWindow(Hwnd)
+
+10-3:
+    对于TableBase，先在设计师界面直接写qss，日后单独分文件
+        已经到了日后
+
+10-4:
+    ※ TableBase作为抽象基类，派生出CmdEditor类，编辑cmdFile
+    ※ bug：TableBase一旦布局则异常退出，改用重写resize事件
+
+    Widget作为CodeEditor友元，直接调用executor.checkAndSetEn()，省去函数封装调用
+    为了CmdEditor窗口阻塞主窗体，采用signal发送至主窗体(setModal无效，原因不明)
+    为了Executor使用事件系统，改为QObject子类
+
+    ※ ！震惊，什么，update()也可以使窗体保持激活(代替SetActiveWindow())，防止假死
+        ↑其实并不稳定，还是SetActiveWindow()香
+    增加timer_beat每秒update，防止锁屏后假死
+
+10-5:
+    ※ 优化命令行匹配，以空格分割关键字，乱序模糊匹配(Executor::isMatch())
+        增加空白字符检测("qt "->"qt code")
+    增加内部命令#quit，自我了结
+
+10-6:
+    ※ 优化命令行匹配：
+        采用正则表达式(QRegExp),以非[字母-数字]字符分割字符串(事后补上命令等级标识符('#'))
+        命令类别判断(不同类别不比较)
+
+    ※ ShellExecute增加缺省路径，防止找不到缺省文件
+
+    调整TableBase配色
+
+    ※ 增加：STILL状态，右键最小化(手动清除视野遮挡)； INPUT状态，窗体内右键，返回STILL状态
+
+    ※ 扩充setState()函数，将窗体状态转换之琐事(如形变与lineEdit可见性)搬入setState()，使主控updateWindow()简洁明了，分工明确
+        副作用：状态转换与changeSizeSlow不再间隔一次timeout与事件(一次完成)
+    取消lineEdit右键菜单
+
+10-7:
+    将文件移入文件夹，统一管理
+    加强Executor中央集权，将InputMethod's listPath 移入Executor，统一管理，通过构造函数传入
+        并删除InputMethod's getPath()函数
+
+    ※ TableBase作为抽象基类，派生出InputMethodEditor类，编辑[需要转换为En输入法的窗口]
+        并删除showInputMethodFile()函数
+
+    ※ 优化lineEdit's Size：适应label内文字长度
+        取消codeEditor内margin()函数(不要试图去猜想主窗体Margin)(分外事)
+        更名suggestResize()为reportSize()，只报告自身内部Size，不理睬主窗体Margin(所谓，两耳不闻"窗"外事)
+        将normalWidth，normalHeight缩减为codeEditor's Size，不再涉及Margin
+        showLabel()不再reportSize()，交由textChange()统一处理(合并signals)
+
+        新增adjustWholeSize()函数，专注调整codeEditor's Size，统一reportSize()
+
+    #[↑codeEditor 代码结构性调整]#
+
+    修改isState()函数，完善INPUT状态判定
+        增加isChangingState变量，代替size，用于状态判定，更精准
+        解决INPUT状态label下拉改变size导致无法拖拽
+
+    moveWindow()不再负责changeSizeSlow()，转而增加判断isState(MOVE)
+
+    今天是结构性改革的一天(自食恶果？)，使代码简洁明了，逻辑清晰将大有裨益
+        改革代码结构尚且牵一发而动全身，更别说国家了
+
+10-8:
+    特殊文件夹：[我的电脑] 文件夹路径->  ::{20D04FE0-3AEA-1069-A2D8-08002B30309D}
+
+    lineEdit's resizeEvent控制label's Size
+    增加cmdEditor右上角问号按钮 弹窗
+
+    ShellExecute打开[我的电脑]会有[QQShellExt64]debug输出，原因不明
+
+    ※ TableBase作为抽象基类，派生出NoteEditor类，编辑Notes
+    ※ Note不为空时，MOVE与STILL模式显示小红点提示
+
+    降低timer_bear频率
+
+    ※ TableBase可删除多行，selectedItems不包含empty cell，so 增加行数的时候，setItem
+        更名getDeleteRow()为showMenu()，移除获取row职能
+        不保存空行(nullptr && "")，优化空行保存读取
+        writeFile()前改变焦点，使得TableWidget退出编辑模式，保存编辑内容
+
+    askShow()之后switchToThisWindow()，获取焦点
+
+    ※ Note不为空时，INPUT占位符显示"note?"，回车直接开启noteEditor
+
+10-9:
+    采用setEnMode()代替直接LoadKeyboardLayout，生效更快
+    更名textChang为textEdit，采用textEdited信号(编程方式改变文本，不发射信号)代替textChanged，避免clear()触发信号
+
+    更改TableBase 滚动条步长
+    TableBase增加条目后，直接选中，跳转最新行，避免过长滚动
+
+10-10:
+    优化空行保存，若为空白字符行，则不保存，并即时回显(delete)
+    NoteEditor新增clear按钮
+    调整音量状态改为->STILL only
+    TableBase增加快捷键：ESC->close()；Ctrl+S -> Save；
+    askShow()，100ms 后再开启timer_move，防止Esc来不及抬起，导致INPUT->STILL
+        不必
+    TableBase 封装 deleteSelectedItems，新增快捷键：Backspace -> deleteSelectedItems
+    (All for 方便 & 快捷)(Time is life)
+
+    ※ 重构：新增SingleEditor类，作为InputMethodEditor & NoteEditor 父类，统一readFile()与writeFile()
+
+10-11:
+    增加快捷键：STILL状态ESC->最小化；INPUT状态 Ctrl+E -> MOVE
+    text()==""时，不允许输入空格(1.逻辑上没必要 ; 2.防止通过空格键进入INPUT后输出多余空格)
+    Ctrl+V 粘贴时( 读取剪贴板 )，阻止过长复制( 防止卡死 )
+    改用 QKeyEvent::matches 匹配 QKeySequence::Save，代替检测两个键
+
+    增加断电指示点
+    增加源文件子文件夹，结构更清晰(1.注意改pro文件 ; 2.头文件加上文件夹名)
+
+10-12：
+    改善GetKey按键检测：第一次按下间隔较长，一定程度防止连按
+    ※ bug:(桌面模式下)最小化后，焦点在任务栏上，此时，GetAsyncKeyState()无法生效(Ctrl+E)
+
+10-13:
+    优化move算法，改善碰撞处理，采用相对位移计算，防止width()/2奇偶偏差
+    取消$browser$,第二参数直接使用网址即可(默认浏览器)
+    ※ TableBase新增上下键移动行(Mom再也不用担心我的Note优先级)
+
+    断电加速step改为3
+    ※ TableBase新增Ctrl+N addRow
+
+10-14:
+    解决Ctrl+N新增行，因Ctrl按下导致的多选问题(clearSections)
+    ※ 增加开机自启动(main函数)
+    ※ 只允许单例运行(QSharedMemory 共享内存锁)(main函数)
+
+    改：Ctrl+V 粘贴时( 读取剪贴板 )，截断过长文本并lable提示
+        INPUT输入，限制字数
+    只允许在INPUT状态 lineEdit 无焦点时 -> MOVE(防止光标选择lineEdit文本时(左键按住移出)，to MOVE)
+    changeSizeSlow()自动速率调整(根据width)(when step==0)
+    手动调整label's width 适应lineEdit
+    优化lineEdit动态长度(考虑边框)
+    改：Ctrl+V 粘贴时( 读取剪贴板 )，考虑原有text
+
+10-15:
+    ※ 取消Task_H，直接检测availableScreen，+ signal触发
+        隐藏任务栏后，被认为全屏(假)，无法闪现
+        Solution：检测若有标题栏，则为假全屏，真全屏起码无边框(视频，游戏)
+
+    ※ 增加TableBase文件拖拽(Mom再也不用担心不会取路径了)
+        裂开，QTableWidget不接受DragDrop事件，只能由父窗体(QDialog)代劳
+
+10-16:
+    ※ STILL状态显示时间(瞬移些许遮挡Need?)
+    timer_beat改回1000ms,以支持STILL状态时间显示
+
+    ※ 采用std::function代替函数指针，更优雅，且能适配lambda
+        PS：Qt中 std::function 无补全//但要自信写！
+
+    优化changeSizeSlow()函数，[bool] isAuto == true时，自动调整速率，并不小于step
+
+    ※ 提供可选TeleportMode (On,Auto,Off)，可在INPUT模式，使用'#'内部命令设置，并储存setting.ini(setTeleportMode()时写入)//自己读自己的，哼
+        路径由Executor统一管理
+
+    增加#Open [Core-Info]命令
+
+    ※ 增加Executor's Inner_Command 's showCode参数(代表实际显示code，区分与匹配code)，+ matchString去重
+        使得#Teleport [On/Auto/Off]，多选项只显示一行成为可能
+
+    ※ 增加TableBase内容更新检查(提示Save)，子类中只需在read/writeFile更新oldList(getContentList())即可启动close检查
+        牺牲效率，换取便捷(否则得在子类read/writeFile中改写)
+
+10-19:
+    ※ Executor新增JavaScript解析(主要用于数学运算)，结果写入剪切板，方便连续计算
+        INPUT界面以'@'标记，使用Executor::text()获取
+
+    ※ INPUT增加PastCodeList类，用以记录历史命令(最多10条)，上下键选择
+
+10-21:
+    ※ 新增系统气泡通知：电源通断提醒，睡眠提醒...
+    ※ 新增Path类，统一管理文件路径
+    降低输入法更新频率，由10ms转入1000ms
+    取消几个非必要inline，提升代码整洁度
+
+10-22:
+    ※ Executor使用CmdEditor内置getContentList()获取列表，防止重复代码读取文件
+        cmdEditor改用指针+new，长期存在，使随时获取TableList成为可能
+            并在showEvent中readFile，更新内容
+    ※ 取消SingleEditor，统一从TableEditor继承而来
+    ※ little bug：QEvent::EnterWhatsThisMode 广播给所有顶层widget，cmdEditor虽然hide()但仍然接收到事件
+        Solution：event中增加isHidden()判断
+
+    ※ NoteEditor增加提醒事项，指定时间弹出系统通知(过期灰色)(相同时间会冲突)
+        艰难险阻：
+            1.统一不同列数TableBase，删除SingleEditor，增强统一性，减少重复代码
+            2.统一后，考虑鲁棒性，将分隔符改为"[|;|]"，导致Executor内readCmdList()内也需修改
+            3.为了消除多处重复字面量("[|;|]")，readCmdList()将使用TableBase函数getContentList()获取列表
+            4.为了方便外部使用，getContentList()将返回值改为QList<QStringList>，并定义别名TableList
+            5.为了使用getContentList()，需要TableBase子类实例存在，将各编辑窗口移入堆中(new)
+            6.由于在堆中长期存在，(close()相当于hide())，导致重新show()后保留上次现场(如：不需要保存的行)，需要在showEvent()中readFile()
+            7.参见Little Bug
+            8.NoteEditor跟改为两列，最后一列列宽无法固定，改为resizeEvent中，手动设置
+            9.重写newLine()与readFile()，添加cellWidget——QDateTimeEdit
+            10.调整QDateTimeEdit Qss样式
+            11.解决QDateTimeEdit 滚轮窃取焦点问题，优化用户体验
+            12.重写read/writeFile，读写QDateTimeEdit数值
+            13.重写getContentList()，因为TableBase无法读取cell
+            14.监视QDateTimeEdit更改，过期变灰色
+            15.增加Timer，监测需提醒条目
+            16.增加延时，防止连续弹出(或保留上次通知List进行比对，(+5s后clear(但其实没必要，因为单位是minute)))
+
+10-23:
+            17.重写exChangeRow()，交换QDateTimeEdit(基类无法获取准确类型，且无法获取其所有权，导致被delete)
+            18.resizeEvent中加入对滚动条可见性的判断(isHidden无效，使用isVisible)
+                但showEvent事件在resizeEvent之后触发，造成isVisible判断不准确，加入qApp->processEvents()解决(更新showEvent)
+                    但首次show时滚动条不能立即visible，改用eventFilter检测滚动条show & hide，手动设置colWidth
+                    或者...直接 table->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+            !setColumnWidth()貌似是基于上一列的，不能直接设置中间列，裂开
+
+10-24:
+    检测whatsThis事件移入TableBase
+
+    Sometimes NOT//!!!※ ※ ...我裂开了，原来switchToThisWindow()失效，是因为窗口FocusPolicy 为 Qt::NoFocus，改为Qt::StrongFocus即可
+    //    但出于switchToThisWindow()会显示任务栏并闪烁提示，暂时不改
+    SwitchToThisWindow()在闪烁时无效，其他窗口有焦点时也不妙(但任务栏不算)
+
+    关于为什么不用事件系统检测按键：
+        因为需要获取输入焦点(switchToThisWindow，导致任务栏闪烁)+有延时，不如GetAsyncKeyState()方便快捷+hasFocus()检测貌似不准确
+
+    !!!※ ※ ...我TM又裂开了，写了半天SystemNotify类用来显示系统通知，然后在debug查资料时不小心发现Qt居然自带这个TM的类!!!???
+    !!!※ ※我他喵，QSystemTrayIcon类不能作为static类成员(可能是因为QApplication未初始化)，否则，即便不包含其头文件，程序也会崩溃!!!
+            采用static指针+new解决
+
+    ※ 新建SystemAPI类，通过"static指针+new"的方式统一并唯一管理公用系统操作类(如：系统托盘、输入法切换)
+
+10-25:
+    ※ setWindowFlag(Qt::Tool)，取消任务栏图标，注意setWindowFlags会覆盖所有标志位，除非用( | )
+    setWindowState(Qt::WindowActive) & setWindowState(Qt::WindowMinimized);;;show() & hide()要成对使用
+
+    ※  1.Qt::Tool 在最小化(Qt::WindowMinimized)后，会在桌面左下角生成小窗口
+        2.通过hide()可以解决
+        3.hide()要通过show()来显示，hide()之后界面停止刷新，导致show()之后repaint()无法立刻生效(盲猜还有好多事件要处理)，导致界面绘制混乱
+        4.通过show()之后processEvents()解决√ (showEvent在show之前，重写showEvent+processEvent无效)
+
+10-26:
+    ※ 加入KeyState类，管理GetAsyncKeyState()四种状态，解决连续按键问题，中键isRelease：解决抢占焦点+浏览器中键滚动
+        删除鸡肋isKeyDown()
+        其实按键检测放在单独QTimer比较好(类似于事件系统轮询)，但费资源
+
+    ※ 增加中键释放时限，长时间Downing，自动释放，便于浏览器页面中键滚动
+
+10-29:
+    Executor类采用lambda代替quit()函数
+    ※ 托盘增加菜单
+
+10-31:
+    ※ CmdEditor增加Extra列，用以显示附加信息(如快捷键、全称)
+
+11-1：
+    noteEditor NewLine()时，QDateTime::currentTime()+1min 防止高亮错误(类似iPhone)
+    ※ noteEditor新增repeatMode
+    改：将noteEditor 's adjustColWidth()改为singleShot(0,)执行（下次事件循环），防止showEvent未执行带来的问题（若0ms失效，可采用10ms）
+        而无需再eventFilter中检测showEvent事件
+    改：无需理会滚动条与行号宽度，将table->width()改为table->horizontalHeader()->width()即可
+
+    ※ 我裂开了，其实只要检测QHeaderView::geometriesChanged信号改变列宽即可，不用管resize还是行号变化
+
+11-4:
+    改：INPUT状态 Ctrl+E直接->MOVE 无需判断isCursorInWindow()
+
+11-6:
+    改：isDownToCurosr()增加isChild()判断，否则控件hasFocus将返回false(控件有单独HWND)
+    将STILL状态 isGetMouseButton()与KeyState::isPress(VK_RBUTTON)处 isCursorInWindow()改为isDownToCurosr()
+        明晰指针所在窗体
+
+    ※ 改：Teleport快捷键改为Ctrl+Shift+E，防止冲突
+        使用快捷键Teleport将无视全屏(因为目前全屏判断不完善，且有些应用(如WizNote)会进入独占全屏)
+
+11-7：
+    ※ 取消Qt::Tool属性(いろんな問題：最小化会有左下角小窗口，只能hide导致show效率低 + 关闭打开的cmd时，窗口层级会下降???)
+        改用QtWin::taskbarDeleteTab(this);//隐藏任务栏图标
+
+    ※ 增加topWindowFromPoint()获取坐标处顶层窗口
+        isOtherFullScreen()改用检测左下角点所属窗口(与前景窗口比较) (即便隐藏任务栏，也会留下两像素)
+
+11-8：
+    TableBase拖拽时取得焦点，防止显示不全
+    newLine添加60s后将second置零
+
+11-15:
+    ※ 新增GapTimer类(in SystemAPI)，使用两次Timeout's Gap来匹配时间点，避免了轮询过长造成的错过 && 轮询过短导致的资源浪费+重复检测
+        并且在休眠恢复后也不会错过休眠间的通知
+
+    ※ SystemAPI类增加sys全局指针(类似于qApp)，避免多对象与定义麻烦，只允许有一个实例(main内，QApplication之后)，用以初始化sys，方便析构
+
+    将STILL状态检测左键的isPress改为isDowning，防止中键瞬移后直接在MOVE状态左键，导致无法检测 & 展开，导致的不爽(用户体验极差)
+
+    跨越两天的零点，不能用QTime检测，改用QDateTime，否则无法区分两天跨度(24:00-00:00)
+
+11-19：
+    noteEditor中，QDateTime 快捷键BackSpace改为R，防止冲突，reset Time to now (second == 0) & color_check
+
+11-22:
+    ※ 新增Hook类，新增#Lock-[keyBoard]指令，用以锁定键盘(便于键盘上看书)，进入INPUT后解除锁定，并有托盘消息通知
+        锁屏界面PIN输入框出现之前可以HOOK，出现之后会被其先行截获，不必担心解不开锁屏问题
+
+11-25:
+    INPUT模式，Executor中，检测输入是否为absolutePath，是则直接ShellExecute打开Path，免去转发cmd，"start" 烦恼
+
+    BUG：Win+D后，(中键后)点击桌面，Follower可被桌面遮挡，Win+D或打开任意窗口打破Win+D后恢复
+    ※ 貌似去掉setState()中的SetActiveWindow(Hwnd)，界面也不会失去响应了(???Why)艹 (堆积大量事件导致卡顿?)(清空事件队列?再不济setActiveWindow())
+        [下次出现，可以用event()查看卡住的事件](重要的是解决问题的能力，不能抓住一个特定问题不放!)
+        去掉之后，解决了INPUT状态打开软件，点击后setState()直接active，导致Follower前置的问题(只会出现在第一次)
+
+11-26：
+    delete getFocus()//用于重复调用catchFocus()以确保前置，但采用(中键释放)闪现后，不存在抢占焦点问题，delete to 提高效率
+
+11-28：
+    更改MOVE状态下显示的文字 (& -> 'ㅅ')
+    增加MOVE状态下，KeyLock状态标识
+
+    ※ 将Executor中 cmdEditor & noteEditor移至SystemAPI中，独立资源不该由Executor管理
+        删除Executor中 hasNote()，改用!sys->noteEditor->isEmpty()，Executor不应该过多插手其它资源
+        改用NoteEditor内QFileSystemWatcher监视noteList.txt修改，保持类独立性，且避免轮询I/O
+        好的，我又改回去了，持续监控貌似资源消耗比较大，其次，我们对实时性要求不大，艹
+
+    moveWindows()中最小化状态下，不进行move，减小资源占用
+
+11-29：
+    BUG：@使用QJsEngine计算浮点数并贴入剪贴板后，卡住并闪退（Label已显示数值）；但无法复现BUG；怀疑QClipboard，改：每次直接qApp->clipboard()，不在构造函数储存；
+
+11-30：
+    ※ 新增getInputFocus()，用以取得输入焦点，Windows不允许随便把窗口提前，打扰用户的工作。可以用附加本线程到最前面窗口的线程(AttachThreadInput)，从而欺骗windows
+    setState()中，to INPUT 时，增加getInputFocus()，保证空格进入INPUT状态时取得焦点，setFocus()只有在前台窗口时有效
+
+12-6：
+    ※ Teleport后加速into STILL，防止伸缩动画时无法检测按键，导致无视用户的左键(or 空格)进入INPUT指令，体验极差
+    setState()函数增加int step参数，由外部控制动画速率
+
+    ※ STILL状态右键(or ESC)最小化窗口由isPress改为isRelease，防止右键触发底层其它窗口的菜单
+        由于INPUT to STILL采用isPress，导致按下右键(isPress)to STILL，抬起右键(isRelease)直接导致最小化
+        So INPUT to STILL也改用isRelease，好家伙，全员isRelease
+1-15：
+    咕咕咕，修正了ShellExecute字符串编码问题，采用宽字符(Utf16)防止编码转换错误
+    改用QString::trimmed();//修正simplify可能导致内部空格丢失导致path错误
+
+2-20：
+    获取任务栏重启信息(nativeEvent)，重新隐藏任务栏图标
+
+10-10:
+    将Ctrl+Shift+E瞬移快捷键 改为全局热键(RegisterHotKey)更加稳定 并防止其它窗口响应热键
+
+10-17：
+    新增Backspace键也能STILL->hide 更符合人体工程学
+
+10-18：
+    尝试了QTimeLine控制伸缩动画，但效果更差，卡顿掉帧，可能（与改变窗口Size+Move有关）仍采用Sleep(1) 微调step
+    #INPUT模式回车执行命令后 自动回复STILL 更方便
+    #新增INPUT模式在空文本时 Ctrl+Backspace 返回STILL；为什么要Ctrl呢：防止按住BackSpace不放，然后抬起直接触发；当然也可以通过检测按下时是否空文本+抬起双线检测，でも面倒
+
+11-8：
+    #参考网易云Mini模式，关于窗体伸缩，或许可以先瞬间展开窗体(透明，无需动态)，再对控件做动态，可能不会卡#但我懒啦
+    修复@JS引擎执行后也会直接恢复STILL，看不到结果的问题(signal:returnWithoutEcho)

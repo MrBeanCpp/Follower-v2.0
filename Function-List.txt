@@ -1,0 +1,78 @@
+Name: Follower(追随者)
+定位：Windows 助理
+    快捷，自定义程度高
+主窗体分为三种状态：MOVE，STILL，INPUT，编辑器状态
+
+Functions:
+1.Follow：MOVE状态下，跟随鼠标
+    活动范围限制于可视桌面(不包括任务栏)
+    移动至鼠标下，自动进入STILL状态，等候发落
+
+2.STILL状态下，滚轮调节音量
+
+3.进入代码编辑器，自动切换英文输入法(可编辑)
+
+4.进入INPUT状态，自动切换英文输入法
+
+5.INPUT状态，鼠标可拖动窗体(防止超出边界)
+
+6.INPUT状态，可调用自定义命令(Case Insensitive)
+     例如：
+        开启文件夹(including virtual)
+        开启应用程序
+        打开网页
+        调用cmd(命令提示符)
+    在自定义命令无匹配后，转发至cmd
+
+    字符串模糊匹配(单词头部)
+    底部下拉label，提示可匹配命令(增强人机交互)
+    自动适应文本长度
+    Ctrl+V粘贴时，检测剪贴板长度，并剪裁(防止过长导致卡死，模仿Baidu)
+    以'#'开头，表示系统内部命令
+        ➀#Edit cmd：编辑自定义命令
+        ➁#Edit note：编辑notes(待办事项)
+        ➂#Edit InputMethod：编辑需要切换En输入法的窗口标题
+        ➃#Teleport [On/Auto/Off]：切换瞬移模式(总是开启/自动判断(全屏)/总是关闭)
+        ➄#Open [Core-Info]：打开核心文件夹
+        ➅#quit：结束进程
+
+7.对于➀➁➂，均有可视化编辑界面(自适应)
+    快捷键：
+        ESC：quit
+        Ctrl+S：Save
+        Ctrl+N；New Line
+        Backspace：delete Selected Row(s)
+        Up/Down：move Selected Row
+        可拖入文件，取得路径
+
+8.断电提示，MOVE | STILL状态，左上角小蓝点亮起·
+    并加速动画step，以抵消断电带来的CPU降频
+
+9.note提示，note为紧急待办事项，在MOVE | STILL状态，左上角小红点亮起·
+    此时，进入INPUT状态，缺省命令为打开note编辑器
+
+10.开机自启动
+
+11.只允许单例运行(不允许打开多个Follower)(利用共享内存锁实现)
+
+12.便捷的快捷键系统：(对键盘的友好支持)
+    MOVE状态下，鼠标中键(或Ctrl+E)：Follower瞬移至鼠标下方，并前置
+        注意：在全屏模式(size + 无标题栏)下，Follower不会闪现，以免打扰用户娱乐(视频 | 游戏)
+    STILL状态下，鼠标左键(或Space)：进入INPUT模式
+                鼠标滚轮：调节音量
+                鼠标右键(或ESC)：最小化Follower(防止遮挡视野)(卸磨杀驴)
+    INPUT状态下，鼠标右键(或ESC)：返回STILL状态
+                单击窗口外任意点(或Ctrl+E)，返回MOVE状态
+                小键盘上下键，查看命令历史记录(最多保存10条)
+
+13.STILL状态显示时间(利于任务栏隐藏时观察Time)
+
+14.INPUT状态，输入'@'开启JavaScript解释器模式：主要用于便捷数学运算(如：@125/26+Math.sin(5))
+
+
+后续功能，尽情期待：(楽しみにしていてください)
+    Translator：链接Baidu翻译API
+    键盘屏蔽快捷键：主要用于上网课，将书防止键盘上，防止误触
+    文件快速查询：类似everything(尝试数据库查询)
+    ...
+    

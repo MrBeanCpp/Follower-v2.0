@@ -1,0 +1,120 @@
+TableBase
+{
+    background-color:rgb(50,50,50);
+}
+QHeaderView
+{
+    background:rgb(65,65,65);
+}
+QTableWidget
+{
+    background:rgb(60,60,60);
+    border:none;
+    font-size:12px;
+    font-family:Microsoft YaHei;
+    color:rgb(255,255,255);
+}
+QTableCornerButton::section
+{
+        background:rgb(100,100,100);
+}
+QHeaderView::section
+{
+    font-size:11px;
+    font-family:"Microsoft YaHei";
+    color:rgb(235,235,235);
+
+    background:rgb(50,50,50);
+    border:1px solid rgb(150,150,150);
+
+    min-height:20px;
+    max-height:20px;
+
+    margin-left:0px;
+    padding-left:0px;
+}
+QTableWidget::item::selected
+{
+    color:rgb(255,255,255);
+    background:rgb(150,150,150);
+}
+QLineEdit
+{
+    color:rgb(255,255,255);
+    background-color:rgb(100,100,100);
+}
+QToolButton
+{
+    background-color:rgb(150,150,150);
+    border-style: flat；
+}
+QToolButton:hover
+{
+    background-color:rgb(120,120,120);
+}
+QScrollBar::handle
+{
+    background: rgb(60,60,60);
+    border: 0px solid grey;
+    border-radius:1px;
+    /*width: 8px;*/
+}
+QScrollBar
+{
+    border-style: flat;
+    /*width: 10px;*/
+    margin:0px 0px 0px 0px;
+    border-radius:2px;
+    /*padding-top:7px;
+    padding-bottom:7px;*/
+}
+QScrollBar:vertical
+{
+    width: 10px;
+}
+QScrollBar:horizontal
+{
+    height: 10px;
+}
+QScrollBar::add-page, QScrollBar::sub-page
+{
+    background:rgb(100,100,100);
+}
+QDateTimeEdit
+{
+    background-color:rgb(70,70,70);
+    color:white;
+    border: 1px solid rgb(90,90,90);
+    font-family:Consolas
+}
+QDateTimeEdit::up-button,QDateTimeEdit::down-button {
+    background-color:rgb(80,80,80);
+    width:5px
+}
+QDateTimeEdit::drop-down {
+    border: 1px solid rgb(100,100,100);
+    width:5px;
+   /* height:5px*/
+}
+QDateTimeEdit::down-arrow{
+    background-color:rgb(80,80,80);
+    /*color:transparent*/
+    width:0px;/*用于隐藏箭头*/
+}
+QComboBox{
+    background-color:rgb(70,70,70);
+    color:white;
+    font-family:Consolas;
+    border: 1px solid rgb(90,90,90);
+}
+QComboBox QAbstractItemView {
+    background-color:rgb(70,70,70);
+    color:white;
+}
+QComboBox::drop-down {
+    border: 1px solid rgb(100,100,100);
+    width: 5px;
+}
+QComboBox::down-arrow{
+    width:0px;/*用于隐藏箭头*/
+}

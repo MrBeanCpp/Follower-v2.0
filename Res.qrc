@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>tableStyle.qss</file>
+        <file>ICON.ico</file>
+    </qresource>
+</RCC>
