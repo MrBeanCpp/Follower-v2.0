@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QTextStream>
+#include <psapi.h>
 InputMethod::InputMethod(const QString& path)
     : listPath(path)
 {
@@ -11,10 +12,12 @@ InputMethod::InputMethod(const QString& path)
 
 void InputMethod::checkAndSetEn()
 {
-    static char title[256];
     HWND hwnd = GetForegroundWindow();
-    GetWindowTextA(hwnd, title, sizeof(title));
-    if (isInList(title) && lastHwnd != hwnd)
+    if (lastHwnd == hwnd) return;
+    QString title = getWindowTitle(hwnd);
+    QString processName = getProcessNameByPID(getForeWindowPID(hwnd));
+    //qDebug() << title << processName;
+    if (isWindowTitleInList(title) || isProcessNameInList(processName))
         setEnMode(hwnd);
     lastHwnd = hwnd;
 }
@@ -27,9 +30,55 @@ bool InputMethod::isInList(const QString& title)
     return false;
 }
 
+bool InputMethod::isWindowTitleInList(const QString& title)
+{
+    for (const QString& str : list)
+        if (!str.endsWith(".exe") && title.contains(str, Qt::CaseInsensitive))
+            return true;
+    return false;
+}
+
+bool InputMethod::isProcessNameInList(const QString& name)
+{
+    for (const QString& str : list)
+        if (name == str)
+            return true;
+    return false;
+}
+
+DWORD InputMethod::getForeWindowPID(HWND hwnd)
+{
+    if (hwnd == NULL)
+        hwnd = GetForegroundWindow();
+    DWORD processId = -1; //not NULL
+    GetWindowThreadProcessId(hwnd, &processId);
+    return processId;
+}
+
+QString InputMethod::getProcessNameByPID(DWORD PID)
+{
+    static WCHAR path[512];
+    HANDLE Process = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, PID);
+    GetProcessImageFileNameW(Process, path, sizeof(path));
+    CloseHandle(Process);
+
+    QString pathS = QString::fromWCharArray(path);
+    return pathS.mid(pathS.lastIndexOf('\\') + 1);
+}
+
+QString InputMethod::getWindowTitle(HWND hwnd)
+{
+    static WCHAR title[256]; //确保都用宽字符 Unicode
+    if (hwnd == NULL)
+        hwnd = GetForegroundWindow();
+    GetWindowTextW(hwnd, title, sizeof(title));
+    return QString::fromWCharArray(title); //解决中文乱码
+}
+
 void InputMethod::setEnMode(HWND hwnd)
 {
     PostMessageA(hwnd, WM_INPUTLANGCHANGEREQUEST, (WPARAM)TRUE, (LPARAM)hkl);
+    //qDebug() << "#set EN++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++";
 }
 
 void InputMethod::readListFile()

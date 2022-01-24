@@ -51,7 +51,7 @@ void Executor::editInputM()
     emit askHide();
     InputMethodEditor inputMEditor(inputMethodListPath);
     inputMEditor.exec();
-    sys->inputM->readListFile();
+    sys->inputM->readListFile(); //更新
     emit askShow();
 }
 

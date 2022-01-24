@@ -227,7 +227,7 @@ void Widget::updateWindow()
             setState(STILL);
         break;
     case STILL:
-        if (KeyState::isDowning(VK_LBUTTON) || KeyState::isPress(VK_SPACE)) {
+        if (isDownToCursor() && (KeyState::isDowning(VK_LBUTTON) || KeyState::isPress(VK_SPACE))) {
             setState(INPUT, 2);
             break;
         } else if (KeyState::isRelease(VK_RBUTTON) || KeyState::isRelease(VK_ESCAPE) || KeyState::isRelease(VK_BACK)) {

@@ -13,7 +13,7 @@ public:
     InputMethod(const QString& path = Path::inputMethodList());
     void setEnMode(HWND hwnd);
     void checkAndSetEn(void);
-    void readListFile(void);
+    void readListFile(void); //在edit之后会重新读取(in executor.cpp)
 
 private:
     HKL hkl;
@@ -23,6 +23,11 @@ private:
 
 private:
     inline bool isInList(const QString& title);
+    bool isWindowTitleInList(const QString& title);
+    bool isProcessNameInList(const QString& name);
+    DWORD getForeWindowPID(HWND hwnd = NULL);
+    QString getProcessNameByPID(DWORD PID);
+    QString getWindowTitle(HWND hwnd = NULL);
 };
 
 #endif // INPUTMETHOD_H

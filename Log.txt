@@ -461,3 +461,10 @@
 11-8：
     #参考网易云Mini模式，关于窗体伸缩，或许可以先瞬间展开窗体(透明，无需动态)，再对控件做动态，可能不会卡#但我懒啦
     修复@JS引擎执行后也会直接恢复STILL，看不到结果的问题(signal:returnWithoutEcho)
+
+
+#2022:
+1-24:
+    原本：STILL状态 [按下左键 or 空格] ->  INPUT ；现：新增一个条件[isDownToCursor()] 否则 例如开启cmd后，自动->STILL 此时空格->INPUT
+
+    更新InputMethod类，更换char->wchar，支持中文，且检测方式新增可执行文件(.exe)所属窗口，例如r5apex.exe

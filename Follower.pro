@@ -68,3 +68,5 @@ RC_FILE += icon.rc
 
 RESOURCES += \
     Res.qrc
+
+LIBS += -lpsapi
