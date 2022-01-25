@@ -33,16 +33,20 @@ bool InputMethod::isInList(const QString& title)
 bool InputMethod::isWindowTitleInList(const QString& title)
 {
     for (const QString& str : list)
-        if (!str.endsWith(".exe") && title.contains(str, Qt::CaseInsensitive))
+        if (!str.endsWith(".exe") && title.contains(str, Qt::CaseInsensitive)) {
+            //qDebug() << "匹配：" << str << " in " << title;
             return true;
+        }
     return false;
 }
 
 bool InputMethod::isProcessNameInList(const QString& name)
 {
     for (const QString& str : list)
-        if (name == str)
+        if (name == str) {
+            //qDebug() << "匹配：" << str << " == " << name;
             return true;
+        }
     return false;
 }
 
@@ -85,6 +89,7 @@ void InputMethod::readListFile()
 {
     QFile file(listPath);
     if (file.open(QFile::ReadWrite | QFile::Text)) {
+        list.clear(); //Don't Forget [2022.1.25]
         QTextStream text(&file);
         text.setCodec("UTF-8");
         while (!text.atEnd())

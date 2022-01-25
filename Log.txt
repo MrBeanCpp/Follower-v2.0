@@ -468,3 +468,7 @@
     原本：STILL状态 [按下左键 or 空格] ->  INPUT ；现：新增一个条件[isDownToCursor()] 否则 例如开启cmd后，自动->STILL 此时空格->INPUT
 
     更新InputMethod类，更换char->wchar，支持中文，且检测方式新增可执行文件(.exe)所属窗口，例如r5apex.exe
+
+1-25:
+    Bug repair:编辑InputMethod后，没有及时更新，问题在于list数组没有clear，导致每次append
+    新增修改cmd & InputMethod后的托盘消息通知(showMessage)

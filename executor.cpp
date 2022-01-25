@@ -43,6 +43,7 @@ void Executor::editCmd()
     emit askHide();
     sys->cmdEditor->exec();
     readCmdList();
+    sys->sysTray->showMessage("Update", "CMD List has [Updated]");
     emit askShow();
 }
 
@@ -52,6 +53,7 @@ void Executor::editInputM()
     InputMethodEditor inputMEditor(inputMethodListPath);
     inputMEditor.exec();
     sys->inputM->readListFile(); //更新
+    sys->sysTray->showMessage("Update", "InputMethod List has [Updated]");
     emit askShow();
 }
 
