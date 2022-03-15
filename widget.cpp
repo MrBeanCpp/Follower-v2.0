@@ -222,6 +222,10 @@ void Widget::updateWindow()
             setState(STILL, 4); //Teleport后加速，防止伸缩动画时无法检测按键
             break;
         }
+
+        if (!isTopWindow() && isTopMost()) //若焦点转移则取消置顶
+            setAlwaysTop(false);
+
         isMove = moveWindow();
         if (!isMove && isDownToCursor())
             setState(STILL);
@@ -353,6 +357,7 @@ void Widget::teleport()
     winPos = QCursor::pos();
     move(centerToLeftTop(winPos.toPoint()));
     catchFocus();
+    setAlwaysTop(); //置顶
 }
 
 void Widget::setTeleportMode(Widget::TeleportMode mode)
@@ -440,8 +445,22 @@ void Widget::registerHotKey()
     Atom = GlobalAddAtomA("Follower_MrBeanC_Teleport");
     HotKeyId = Atom - 0xC000;
     //Ctrl+Shift+E 瞬移全局快捷键
-    bool bHotKey = RegisterHotKey((HWND)winId(), HotKeyId, MOD_CONTROL | MOD_SHIFT, 'E'); //只会响应一个线程的热键，因为响应后，该消息被从队列中移除，无法发送给其他窗口
+    bool bHotKey = RegisterHotKey(Hwnd, HotKeyId, MOD_CONTROL | MOD_SHIFT, 'E'); //只会响应一个线程的热键，因为响应后，该消息被从队列中移除，无法发送给其他窗口
     qDebug() << "RegisterHotKey: " << Atom << HotKeyId << bHotKey;
+}
+
+void Widget::setAlwaysTop(bool bTop)
+{
+    if (Hwnd) //必须要用HWND_BOTTOM HWND_NOTOPMOST 无效（依旧top）：将窗口置于所有非顶层窗口之上（即在所有顶层窗口之后）
+        SetWindowPos(Hwnd, bTop ? HWND_TOPMOST : HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW); //持续置顶
+    qDebug() << "setTop:" << bTop;
+}
+
+bool Widget::isTopMost()
+{
+    if (Hwnd == nullptr) return false;
+    LONG_PTR style = GetWindowLongPtrW(Hwnd, GWL_EXSTYLE);
+    return style & WS_EX_TOPMOST;
 }
 
 void Widget::paintEvent(QPaintEvent* event)
@@ -546,5 +565,5 @@ void Widget::closeEvent(QCloseEvent* event)
 {
     Q_UNUSED(event)
     qDebug() << "GlobalDeleteAtom:" << GlobalDeleteAtom(Atom); //=0
-    qDebug() << "UnregisterHotKey:" << UnregisterHotKey((HWND)winId(), HotKeyId); //!=0
+    qDebug() << "UnregisterHotKey:" << UnregisterHotKey(Hwnd, HotKeyId); //!=0
 }

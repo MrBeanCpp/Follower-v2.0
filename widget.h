@@ -96,6 +96,8 @@ private:
     void readIni(void);
     void Init_SystemTray(void);
     void registerHotKey(void);
+    void setAlwaysTop(bool bTop = true);
+    bool isTopMost(void);
 
     // QWidget interface
 protected:
