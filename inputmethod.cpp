@@ -63,7 +63,7 @@ QString InputMethod::getProcessNameByPID(DWORD PID)
 {
     static WCHAR path[512];
     HANDLE Process = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, PID);
-    GetProcessImageFileNameW(Process, path, sizeof(path));
+    GetProcessImageFileNameW(Process, path, _countof(path)); //not sizeof
     CloseHandle(Process);
 
     QString pathS = QString::fromWCharArray(path);
@@ -75,7 +75,7 @@ QString InputMethod::getWindowTitle(HWND hwnd)
     static WCHAR title[256]; //确保都用宽字符 Unicode
     if (hwnd == NULL)
         hwnd = GetForegroundWindow();
-    GetWindowTextW(hwnd, title, sizeof(title));
+    GetWindowTextW(hwnd, title, _countof(title)); //not sizeof
     return QString::fromWCharArray(title); //解决中文乱码
 }
 

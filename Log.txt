@@ -475,3 +475,6 @@
 
 3-15：
     teleport()之后增加置顶 防止被TOPMOST窗口遮挡，在焦点转移时，设置HWND_BOTTOM标志 取消置顶（但会导致直接打入最底层）不过别无他法 NOTOPMOST无效
+
+3-22：
+    InputMethod中 更改sizeof -> _countof 防止字符计算错误导致溢出（like QQ Follower）
