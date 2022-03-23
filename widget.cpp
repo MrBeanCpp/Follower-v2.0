@@ -148,10 +148,13 @@ bool Widget::moveWindow()
 
 void Widget::getInputFocus()
 { //因为2000/XP改变了SetForegroundWindow的执行方式，不允许随便把窗口提前，打扰用户的工作。可以用附加本线程到最前面窗口的线程，从而欺骗windows。
-    AttachThreadInput(GetWindowThreadProcessId(::GetForegroundWindow(), NULL), GetCurrentThreadId(), TRUE);
+    HWND foreHwnd = GetForegroundWindow();
+    DWORD foreThreadID = GetWindowThreadProcessId(foreHwnd, NULL);
+    DWORD threadID = GetCurrentThreadId();
+    AttachThreadInput(threadID, foreThreadID, TRUE);
     SetForegroundWindow(Hwnd);
     SetFocus(Hwnd);
-    AttachThreadInput(GetWindowThreadProcessId(::GetForegroundWindow(), NULL), GetCurrentThreadId(), FALSE);
+    AttachThreadInput(threadID, foreThreadID, FALSE);
 }
 
 void Widget::changeSizeSlow(QSize size, int step, bool isAuto)

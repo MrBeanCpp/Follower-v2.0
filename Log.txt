@@ -478,3 +478,8 @@
 
 3-22：
     InputMethod中 更改sizeof -> _countof 防止字符计算错误导致溢出（like QQ Follower）
+
+3-23：
+    BugFix：修正getInputFocus()中未保存GetForegroundWindow()导致两次获取值不同 导致未正确断开连接 导致setAlwaysTop(false)不正常
+    具体表现为：Follower 开启 TextEditor -> 按空格 ->进入编辑模式 ->点击TextEditor 无法正确转移焦点
+    保存HWND值即可
