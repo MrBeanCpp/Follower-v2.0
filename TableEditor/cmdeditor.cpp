@@ -5,6 +5,8 @@
 #include <QStringList>
 #include <QTextStream>
 #include <QWhatsThis>
+#include <QInputDialog>
+#include <QKeyEvent>
 CmdEditor::CmdEditor(const QString& Path, QWidget* parent)
     : TableEditor(Path, parent)
 {
@@ -48,4 +50,38 @@ void CmdEditor::resizeEvent(QResizeEvent* event)
 {
     TableEditor::resizeEvent(event);
     table->setColumnWidth(PathCol, width() * (7 / 12.0));
+}
+
+void CmdEditor::keyPressEvent(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_F && (event->modifiers() | Qt::ControlModifier)) { //Ctrl+F查找
+        QInputDialog* d = new QInputDialog(this);
+        d->setStyleSheet("QLineEdit{background:white;color:black;}"); //覆盖父类的qss
+        d->setAttribute(Qt::WA_DeleteOnClose);
+        d->setInputMode(QInputDialog::TextInput);
+
+        static auto searchText = [=](const QString& text) {
+            auto list = table->findItems(text, Qt::MatchContains);
+            int rows = table->rowCount();
+            for (int i = 0; i < rows; i++)
+                table->setRowHidden(i, true);
+            for (auto item : list) {
+                int row = table->row(item);
+                table->setRowHidden(row, false);
+            }
+        };
+
+        connect(d, &QInputDialog::textValueChanged, searchText);
+        connect(d, &QInputDialog::finished, [=]() {
+            searchText(""); //恢复
+        });
+        connect(this, &CmdEditor::aboutToClose, d, &QInputDialog::close);
+        d->show();
+    }
+}
+
+void CmdEditor::closeEvent(QCloseEvent* event)
+{
+    emit aboutToClose(); //如果用的多的话 可以移至父类
+    TableEditor::closeEvent(event); //调用父类函数
 }

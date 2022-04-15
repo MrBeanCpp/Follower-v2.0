@@ -15,12 +15,23 @@ public:
 private:
     void simplifyPath(void); //去除路径引号
 
+signals:
+    void aboutToClose(void);
+
     // QWidget interface
 protected:
     void resizeEvent(QResizeEvent* event) override;
 
 private:
     const int PathCol = 2;
+
+    // QWidget interface
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
+
+    // QWidget interface
+protected:
+    void closeEvent(QCloseEvent* event) override;
 };
 
 #endif // CMDEDITOR_H
