@@ -125,7 +125,7 @@ bool Executor::isExistPath(const QString& str)
     return QFileInfo::exists(_str);
 }
 
-Executor::State Executor::run(const QString& code)
+Executor::State Executor::run(const QString& code, bool isWithExtra)
 {
     clearText();
     if (code.isEmpty()) return NOCODE;
@@ -142,7 +142,9 @@ Executor::State Executor::run(const QString& code)
     }
 
     auto iter = std::find_if(cmdList.begin(), cmdList.end(), [=](const Command& cmd) { //模糊匹配
-        return isMatch(cmd.code, code); //cmd.code.indexOf(code, 0, Qt::CaseInsensitive) == 0
+        QString sor = cmd.code;
+        if (isWithExtra) sor += cmd.extra; //加上extra匹配
+        return isMatch(sor, code); //cmd.code.indexOf(code, 0, Qt::CaseInsensitive) == 0
     });
     auto iter_inner = std::find_if(innerCmdList.begin(), innerCmdList.end(), [=](const InnerCommand& cmd) {
         return isMatch(cmd.code, code); //cmd.code.indexOf(code, 0, Qt::CaseInsensitive) == 0
@@ -166,24 +168,34 @@ Executor::State Executor::run(const QString& code)
     }
 }
 
-QStringList Executor::matchString(const QString& str, Qt::CaseSensitivity cs) //
+QList<QPair<QString, QString>> Executor::matchString(const QString& str, Qt::CaseSensitivity cs) //
 {
-    QStringList list;
-    if (str == "") return list;
+    clearText();
+    QList<QPair<QString, QString>> list;
+    if (str.isEmpty()) return list;
 
-    if (symbol(str) == Js_Cmd) return list << "Inputing JavaScript Code...";
+    if (symbol(str) == Js_Cmd) {
+        echoText = "Inputing JavaScript Code...";
+        return list;
+    }
 
-    if (isExistPath(str)) return list << "Maybe a Path...";
+    if (isExistPath(str)) {
+        echoText = "Maybe a Path...";
+        return list;
+    }
 
     for (const Command& cmd : cmdList)
-        if (isMatch(cmd.code, str)) //忽略大小写//cmd.code.indexOf(str, 0, Qt::CaseInsensitive) == 0)
-            list << cmd.code + cmd.extra;
+        if (isMatch(cmd.code, str, cs)) //忽略大小写//cmd.code.indexOf(str, 0, Qt::CaseInsensitive) == 0)
+            list << qMakePair(cmd.code + cmd.extra, cmd.filename);
 
+    QSet<QString> codeSet;
     for (const InnerCommand& cmd : innerCmdList)
-        if (isMatch(cmd.code, str)) { //忽略大小写
+        if (isMatch(cmd.code, str, cs)) { //忽略大小写
             QString str = cmd.showCode.isEmpty() ? cmd.code : cmd.showCode;
-            if (!list.contains(str, cs)) //去重
-                list << str;
+            if (!codeSet.contains(str)) { //去重
+                codeSet << str;
+                list << qMakePair(str, QString());
+            }
         }
     return list;
 }
@@ -196,4 +208,9 @@ bool Executor::hasText()
 QString Executor::text()
 {
     return echoText;
+}
+
+QList<Command> Executor::getCMDList()
+{
+    return cmdList;
 }

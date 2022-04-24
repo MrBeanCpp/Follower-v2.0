@@ -59,7 +59,8 @@ Widget::Widget(QWidget *parent)
     connect(lineEdit, &CodeEditor::reportResize, [=](int w, int h) {
         int W = w >= 0 ? w + 2 * Margin : width();
         int H = h >= 0 ? h + 2 * Margin : height();
-        changeSizeSlow(QSize(W, H), 6, true);
+        resize(W, H);
+        //changeSizeSlow(QSize(W, H), 6, true);
         //changeSizeEx(QSize(W, H));
     });
 
@@ -69,7 +70,8 @@ Widget::Widget(QWidget *parent)
 
     QTimer* timer_beat = new QTimer(this); //心跳，防止假死
     connect(timer_beat, &QTimer::timeout, [=]() {
-        update(); //更新时间显示
+        if (!isState(INPUT)) //INPUT状态update会导致拖拽卡顿
+            update(); //更新时间显示
 
         sys->inputM->checkAndSetEn(); //En输入法//降低更新频率
 

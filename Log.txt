@@ -486,3 +486,17 @@
 
 4-14：
     为cmdEditor增加Ctrl+F搜索功能（如果有需要的话，可以移至父类）
+
+4-24：
+    重点重构CodeEditor类：
+    1.新增CMDListWidget类 代替Label显示待选命令列表（增加图标 & 缓存防止I/O瓶颈）
+        并支持↑↓键选择 & 双击选中
+        保留原有Label用以显示提示信息
+    2.原有的历史记录功能改为Ctrl+↑↓键
+    3.增加TextLimit
+    4.采用原生setMaxLength()函数 代替手动判断来 限制最大输入长度 & paste粘贴长度
+    5.禁止在isState(INPUT)时 在widget定时器中update（会造成鼠标拖拽卡顿）
+    6.增加Executor::matchString的返回信息
+    7.更改CodeEditor::reportSize 使widget立即resize（取消动画 因为QListWidget会导致卡顿）
+
+    问题：带Icon的list渲染慢（与item数成正比）

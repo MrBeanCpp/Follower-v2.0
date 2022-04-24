@@ -6,7 +6,8 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QWidget>
-
+#include "cmdlistwidget.h"
+#include <QFileIconProvider>
 struct PastCodeList {
     PastCodeList()
         : lineLimit(10), index(0) {}
@@ -57,6 +58,9 @@ class Widget;
 class CodeEditor : public QLineEdit
 {
     Q_OBJECT
+
+    using IconStrList = CMDListWidget::IconStrList;
+
 public:
     explicit CodeEditor(int width, int height, QWidget* parent = nullptr);
     friend class Widget;
@@ -67,16 +71,20 @@ signals:
 
 private:
     Executor executor;
-    QLabel* label;
+    QLabel* label = nullptr;
+    CMDListWidget* lw = nullptr;
+    QFileIconProvider iconPro;
     //QClipboard* clipboard;
 
     const int normalWidth; //LineEditor宽度
     const int normalHeight;
     const int Margin = 5; //内部Margin，与主窗体无关
-    const int TextLimit = 50;
+    const int TextLimit = 128;
     const QString Holder_note = "note?";
 
     PastCodeList pastCodeList { 10 }; //code历史记录//不能用()存在歧义(函数声明or变量声明)
+
+    QMap<QString, QIcon> iconCache;
 
     // QWidget interface
 protected:
@@ -87,11 +95,15 @@ protected:
 
 private:
     void showLabel(const QString& text);
-    void hideLabel(void);
-    QString listToStr(const QStringList& strList);
+    void hideLabel(bool isAdjustSize = true);
+    void showList(const IconStrList& list);
+    void hideList(bool isAdjustSize = true);
+    void hideDisplay(void); //list && label
+    //QString listToStr(const QStringList& strList);
     void textEdit(const QString& text);
     void adjustWholeSize();
     void returnPress(void);
+    QIcon getUrlIcon(const QString& path);
 
 public:
     void silent(void);

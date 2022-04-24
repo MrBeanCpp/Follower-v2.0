@@ -22,6 +22,7 @@ SOURCES += \
     TableEditor/noteeditor.cpp \
     TableEditor/tablebase.cpp \
     TableEditor/tableeditor.cpp \
+    cmdlistwidget.cpp \
     codeeditor.cpp \
     executor.cpp \
     gaptimer.cpp \
@@ -39,6 +40,7 @@ HEADERS += \
     TableEditor/noteeditor.h \
     TableEditor/tablebase.h \
     TableEditor/tableeditor.h \
+    cmdlistwidget.h \
     codeeditor.h \
     executor.h \
     gaptimer.h \
