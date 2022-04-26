@@ -506,4 +506,6 @@
         solution：先显示同一默认图标，在渲染完毕后，多线程setIcon，更新图标
         PS：QIcon没有operator==，需要用cacheKey手动定义
         & 使用listCache，在内容不变时不重新渲染（hide时需要clear）
+        (如果嫌一起渲染还是响应慢的话 可以set一个icon就update & processEvent 并在用户输入改变后停止渲染):无效 update不是立即的 repaint会报无限递归错误
     2.表格拖拽到空白处要判空（nullptr）
+    3.增加tModify(QTime)记录listCache上次修改的时间，用来监测多线程中，其是否被修改
