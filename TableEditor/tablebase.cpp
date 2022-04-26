@@ -181,7 +181,8 @@ void TableBase::dragMoveEvent(QDragMoveEvent* event)
 void TableBase::dropEvent(QDropEvent* event)
 {
     Q_UNUSED(event)
-    dropItem->setText(dropPath);
+    if (dropItem) //对nullptr使用会卡顿
+        dropItem->setText(dropPath);
 }
 
 void TableBase::closeEvent(QCloseEvent* event)

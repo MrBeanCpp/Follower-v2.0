@@ -187,6 +187,7 @@ QList<QPair<QString, QString>> Executor::matchString(const QString& str, Qt::Cas
     for (const Command& cmd : cmdList)
         if (isMatch(cmd.code, str, cs)) //忽略大小写//cmd.code.indexOf(str, 0, Qt::CaseInsensitive) == 0)
             list << qMakePair(cmd.code + cmd.extra, cmd.filename);
+    //无需去重 可能出现同名不同path等 让用户选择
 
     QSet<QString> codeSet;
     for (const InnerCommand& cmd : innerCmdList)

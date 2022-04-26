@@ -1,5 +1,7 @@
 #include "cmdlistwidget.h"
 #include <QKeyEvent>
+#include <QApplication>
+#include <QtConcurrent>
 
 CMDListWidget::CMDListWidget(QWidget* parent)
     : QListWidget(parent)
@@ -8,21 +10,42 @@ CMDListWidget::CMDListWidget(QWidget* parent)
                   "QListWidget::item:selected{background-color:lightgray; color:black; }"
                   "QListWidget::item:selected:!active{background-color:gray; }");
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setUniformItemSizes(true); //统一优化
 
     connect(this, &CMDListWidget::itemDoubleClicked, this, &CMDListWidget::itemActivedEx);
 }
 
-void CMDListWidget::addIconItems(const IconStrList& list)
+void CMDListWidget::addIconItems(const IconStrList& list) //貌似加载不同的图标会降低绘制速度（可能影响优化）
 {
-    clear();
+    if (listCache == list) { //防止重复绘制
+        qDebug() << "Hit Cache";
+        return;
+    }
+    listCache = list;
+
+    this->clear();
     for (auto& p : list) {
+        static QIcon nullIcon(":/images/web.png"); //默认图标
         QListWidgetItem* item = new QListWidgetItem(p.second, this);
         item->setSizeHint(QSize(-1, Item_H));
-        if (!p.first.isNull()) item->setIcon(p.first);
+        //item->setIcon(p.first); //QIcon()==无图标
+        if (!p.first.isNull())
+            item->setIcon(nullIcon);
         addItem(item);
     }
     setCurrentRow(0);
     adjustSizeEx();
+
+    QTimer::singleShot(0, [=]() { //进入事件队列 在首次渲染list完成后再add Icon
+        QtConcurrent::run([=]() {
+            int rows = count();
+            if (!isVisible()) return;
+            if (listCache.size() != rows) return;
+            for (int i = 0; i < rows; i++) {
+                item(i)->setIcon(list[i].first);
+            }
+        });
+    });
 }
 
 void CMDListWidget::adjustSizeEx()
@@ -63,4 +86,15 @@ void CMDListWidget::keyPressEvent(QKeyEvent* event)
         break;
     }
     return QListWidget::keyPressEvent(event);
+}
+
+void CMDListWidget::hideEvent(QHideEvent* event)
+{
+    Q_UNUSED(event)
+    listCache.clear(); //hide时Cache失效，防止show时 Cache==list 导致不绘制
+}
+
+bool operator==(const QIcon& lhs, const QIcon& rhs) //QIcon只能用cacheKey 无预定义==
+{
+    return lhs.cacheKey() == rhs.cacheKey();
 }

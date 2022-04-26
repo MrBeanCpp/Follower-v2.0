@@ -33,7 +33,7 @@ private:
     QMenu* deleteMenu; //右键点击
     QAction* deleteAction; //删除事件（如需要其它事件，可新定义）
 
-    QTableWidgetItem* dropItem;
+    QTableWidgetItem* dropItem = nullptr;
     QString dropPath;
 
 private slots:

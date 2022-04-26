@@ -500,3 +500,10 @@
     7.更改CodeEditor::reportSize 使widget立即resize（取消动画 因为QListWidget会导致卡顿）
 
     问题：带Icon的list渲染慢（与item数成正比）
+
+4-26：
+    1.经过实验，图标会导致listWidget渲染满（特别是多种不同图标）
+        solution：先显示同一默认图标，在渲染完毕后，多线程setIcon，更新图标
+        PS：QIcon没有operator==，需要用cacheKey手动定义
+        & 使用listCache，在内容不变时不重新渲染（hide时需要clear）
+    2.表格拖拽到空白处要判空（nullptr）

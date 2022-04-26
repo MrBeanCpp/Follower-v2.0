@@ -19,6 +19,7 @@ public:
 
 private:
     static constexpr int Item_H = 25;
+    IconStrList listCache;
 
 signals:
     void itemActivedEx(QListWidgetItem* item); //双击或回车
@@ -26,6 +27,12 @@ signals:
     // QWidget interface
 protected:
     void keyPressEvent(QKeyEvent* event) override;
+
+    // QWidget interface
+protected:
+    void hideEvent(QHideEvent* event) override;
 };
+
+bool operator==(const QIcon& lhs, const QIcon& rhs); //定义运算符
 
 #endif // CMDLISTWIDGET_H
