@@ -158,15 +158,14 @@ void CodeEditor::adjustWholeSize()
 {
     int width = QFontMetrics(font()).horizontalAdvance(text()) + 10; //考虑边框
     int height = normalHeight;
+    width = qMax(width, normalWidth);
 
     if (label->isVisible()) {
-        label->adjustSize(); //激活自适应
-        width = qMax(width, label->width());
+        //label->adjustSize(); //激活自适应
         height = normalHeight + label->height() + Margin;
+        width = qMax(width, label->width());
+        label->resize(width, label->height());
     }
-
-    width = qMax(width, normalWidth);
-    label->resize(width, label->height());
 
     if (lw->isVisible()) {
         width = qMax(width, lw->width());

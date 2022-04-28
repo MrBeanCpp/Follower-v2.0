@@ -512,3 +512,4 @@
 
 4-28：
     重构：抽象出CacheIconProvider类，处理缓存问题
+    重构adjustWholeSize()使逻辑更清晰
