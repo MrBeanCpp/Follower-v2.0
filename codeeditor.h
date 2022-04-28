@@ -7,7 +7,7 @@
 #include <QLineEdit>
 #include <QWidget>
 #include "cmdlistwidget.h"
-#include <QFileIconProvider>
+#include "cacheiconprovider.h"
 struct PastCodeList {
     PastCodeList()
         : lineLimit(10), index(0) {}
@@ -73,7 +73,8 @@ private:
     Executor executor;
     QLabel* label = nullptr;
     CMDListWidget* lw = nullptr;
-    QFileIconProvider iconPro;
+    //QFileIconProvider iconPro;
+    CacheIconProvider iconPro;
     //QClipboard* clipboard;
 
     const int normalWidth; //LineEditor宽度
@@ -83,8 +84,6 @@ private:
     const QString Holder_note = "note?";
 
     PastCodeList pastCodeList { 10 }; //code历史记录//不能用()存在歧义(函数声明or变量声明)
-
-    QMap<QString, QIcon> iconCache;
 
     // QWidget interface
 protected:
@@ -99,11 +98,9 @@ private:
     void showList(const IconStrList& list);
     void hideList(bool isAdjustSize = true);
     void hideDisplay(void); //list && label
-    //QString listToStr(const QStringList& strList);
     void textEdit(const QString& text);
     void adjustWholeSize();
     void returnPress(void);
-    QIcon getUrlIcon(const QString& path);
 
 public:
     void silent(void);

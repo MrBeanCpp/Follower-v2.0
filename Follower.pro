@@ -23,6 +23,7 @@ SOURCES += \
     TableEditor/noteeditor.cpp \
     TableEditor/tablebase.cpp \
     TableEditor/tableeditor.cpp \
+    cacheiconprovider.cpp \
     cmdlistwidget.cpp \
     codeeditor.cpp \
     executor.cpp \
@@ -41,6 +42,7 @@ HEADERS += \
     TableEditor/noteeditor.h \
     TableEditor/tablebase.h \
     TableEditor/tableeditor.h \
+    cacheiconprovider.h \
     cmdlistwidget.h \
     codeeditor.h \
     executor.h \

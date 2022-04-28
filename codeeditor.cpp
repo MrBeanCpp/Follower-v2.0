@@ -28,10 +28,8 @@ CodeEditor::CodeEditor(int width, int height, QWidget* parent)
     //clipboard = qApp->clipboard(); //系统剪切板
 
     auto cmdList = executor.getCMDList();
-    for (const auto& cmd : cmdList) {
-        const QString& path = cmd.filename;
-        iconCache[path] = getUrlIcon(path);
-    }
+    for (const auto& cmd : cmdList)
+        iconPro.addCache(cmd.filename); //初始化缓存
 }
 
 void CodeEditor::hideEvent(QHideEvent* event)
@@ -148,12 +146,7 @@ void CodeEditor::textEdit(const QString& text)
             IconStrList itemList;
             for (const auto& p : list) {
                 const QString& path = p.second;
-                QIcon icon = iconCache.value(path);
-                if (!path.isEmpty() && icon.isNull()) {
-                    iconCache[path] = icon = getUrlIcon(path);
-                    qDebug() << path;
-                }
-                itemList << qMakePair(icon, p.first);
+                itemList << qMakePair(iconPro.icon(path), p.first);
             }
             showList(itemList);
         }
@@ -207,19 +200,6 @@ void CodeEditor::returnPress()
             emit returnWithoutEcho();
         }
     }
-}
-
-QIcon CodeEditor::getUrlIcon(const QString& path)
-{
-    QIcon icon;
-    if (!path.isEmpty()) {
-        QString scheme = QUrl(path).scheme();
-        if (scheme.startsWith("http"))
-            icon = QIcon(":/images/web.png");
-        else
-            icon = iconPro.icon(QFileInfo(path));
-    }
-    return icon;
 }
 
 void CodeEditor::silent()
