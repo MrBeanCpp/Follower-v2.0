@@ -46,7 +46,7 @@ public:
     };
     Executor(QObject* parent = nullptr);
     State run(const QString& code, bool isWithExtra = false);
-    QList<QPair<QString, QString>> matchString(const QString& str, Qt::CaseSensitivity cs = Qt::CaseInsensitive); //cmdList中匹配的命令(模糊查询)
+    QList<QPair<QString, QString>> matchString(const QString& str, State* state = nullptr, Qt::CaseSensitivity cs = Qt::CaseInsensitive); //cmdList中匹配的命令(模糊查询)
     bool hasText(void);
     QString text(void);
     QList<Command> getCMDList(void);

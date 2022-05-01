@@ -7,6 +7,7 @@
 #include <QProcess>
 #include <QString>
 #include <windows.h>
+#include <QDirModel>
 CodeEditor::CodeEditor(int width, int height, QWidget* parent)
     : QLineEdit(parent), label(new QLabel(parent)), lw(new CMDListWidget(parent)), normalWidth(width), normalHeight(height)
 {
@@ -25,7 +26,13 @@ CodeEditor::CodeEditor(int width, int height, QWidget* parent)
 
     connect(lw, &CMDListWidget::itemActivedEx, this, &CodeEditor::returnPress);
 
-    //clipboard = qApp->clipboard(); //系统剪切板
+    comp = new QCompleter(new QDirModel(this), parent); //如果completer的父对象是lineEdit 则setCompleter(nullptr)会delete completer(参照Qt源码)
+    comp->setCompletionMode(QCompleter::InlineCompletion);
+
+    //用于在触发补全时(setText 不触发textEdit) 调整size
+    connect(comp, QOverload<const QString&>::of(&QCompleter::highlighted), [=](const QString& text) {
+        adjustWholeSize(text); //放在textChanged也行 但为了提升性能 不做重复adjust (text()比较滞后)
+    });
 
     auto cmdList = executor.getCMDList();
     for (const auto& cmd : cmdList)
@@ -79,6 +86,17 @@ void CodeEditor::keyPressEvent(QKeyEvent* event)
             if (lw->isVisible())
                 lw->selectNext();
         }
+    } else if (key == Qt::Key_Return || key == Qt::Key_Enter) {
+        if (completer() && selectedText() != "") { //手动在hasSelectedText的时候阻止run
+            QString str = text();
+            if (str.endsWith('\\')) { //目录需要去掉'\'
+                str.chop(1);
+                setText(str);
+            }
+            end(false);
+            deselect();
+            return;
+        }
     }
     return QLineEdit::keyPressEvent(event);
 }
@@ -131,7 +149,7 @@ void CodeEditor::hideDisplay()
     adjustWholeSize();
 }
 
-void CodeEditor::textEdit(const QString& text)
+void CodeEditor::textEdit(const QString& text) //不包括setText clear等代码方式的edit
 {
     if (text.length() >= maxLength()) { //在==后就不会触发textEdit
         showLabel("#Warning: too many words#");
@@ -140,6 +158,8 @@ void CodeEditor::textEdit(const QString& text)
 
     if (!text.isEmpty()) {
         QList<QPair<QString, QString>> list = executor.matchString(text);
+        setCompleter(text.contains(':') ? comp : nullptr); //设置路径补全(检测':'防止盘符字母和Code混淆)
+
         if (list.empty()) {
             showLabel(executor.hasText() ? executor.text() : "No match code");
         } else {
@@ -154,14 +174,13 @@ void CodeEditor::textEdit(const QString& text)
         hideDisplay();
 }
 
-void CodeEditor::adjustWholeSize()
+void CodeEditor::adjustWholeSize(const QString& str)
 {
-    int width = QFontMetrics(font()).horizontalAdvance(text()) + 10; //考虑边框
+    int width = QFontMetrics(font()).horizontalAdvance(str == "" ? text() : str) + 10; //考虑边框
     int height = normalHeight;
     width = qMax(width, normalWidth);
 
     if (label->isVisible()) {
-        //label->adjustSize(); //激活自适应
         height = normalHeight + label->height() + Margin;
         width = qMax(width, label->width());
         label->resize(width, label->height());

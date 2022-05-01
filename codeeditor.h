@@ -8,6 +8,7 @@
 #include <QWidget>
 #include "cmdlistwidget.h"
 #include "cacheiconprovider.h"
+#include <QCompleter>
 struct PastCodeList {
     PastCodeList()
         : lineLimit(10), index(0) {}
@@ -75,6 +76,7 @@ private:
     CMDListWidget* lw = nullptr;
     //QFileIconProvider iconPro;
     CacheIconProvider iconPro;
+    QCompleter* comp = nullptr;
     //QClipboard* clipboard;
 
     const int normalWidth; //LineEditor宽度
@@ -99,7 +101,7 @@ private:
     void hideList(bool isAdjustSize = true);
     void hideDisplay(void); //list && label
     void textEdit(const QString& text);
-    void adjustWholeSize();
+    void adjustWholeSize(const QString& str = QString());
     void returnPress(void);
 
 public:

@@ -513,3 +513,22 @@
 4-28：
     重构：抽象出CacheIconProvider类，处理缓存问题
     重构adjustWholeSize()使逻辑更清晰
+
+5-1：
+    新增QCompleter路径补全器(inline模式)
+    只在可能是路径时开启(提升性能)(通过检测':')
+    连接 QCompleter::highlighted 处理adjustWholeSize问题
+    补全以selectedText的形式展示(setText)，按下回车时解除选中，但是会同时触发returnPressed导致run Code
+    路径：展示候选时 setText 然后selectText，按下回车时deselect 导致在returnPressed信号发送时 selectText==""
+    根据Qt源码：QCompleter在inline模式下不处理widget's Event 但是回车后会自动去除目录的'\'，推测可能是QDirModel干的
+    解法1：
+        //用于在待选未确认(selected)的状态下 不触发run
+        //不能用selectionChanged信号 因为returnPress后 selectedText==""
+        //    connect(this, &CodeEditor::textChanged, [=]() { //Left/Right Backspace不会触发textChanged但会改变select状态 需要特判
+        //        QTimer::singleShot(0, [=]() { //QCompleter应该是先setText 然后select 所以需要延时等待其响应
+        //            isSelected = hasSelectedText();
+        //        });
+        //    });
+
+    解法2：
+        QCompleter没有对widget的EventFilter做任何处理，所以重写lineEdit的keyPress即可，在有selectedText的时候阻止发出signal，并手动处理selection

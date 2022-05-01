@@ -168,19 +168,22 @@ Executor::State Executor::run(const QString& code, bool isWithExtra)
     }
 }
 
-QList<QPair<QString, QString>> Executor::matchString(const QString& str, Qt::CaseSensitivity cs) //
+QList<QPair<QString, QString>> Executor::matchString(const QString& str, State* state, Qt::CaseSensitivity cs) //
 {
     clearText();
+    if (state) *state = NOCODE;
     QList<QPair<QString, QString>> list;
     if (str.isEmpty()) return list;
 
     if (symbol(str) == Js_Cmd) {
         echoText = "Inputing JavaScript Code...";
+        if (state) *state = JSCODE;
         return list;
     }
 
     if (isExistPath(str)) {
         echoText = "Maybe a Path...";
+        if (state) *state = PATH;
         return list;
     }
 
@@ -198,6 +201,8 @@ QList<QPair<QString, QString>> Executor::matchString(const QString& str, Qt::Cas
                 list << qMakePair(str, QString());
             }
         }
+
+    if (state) *state = CODE; //统一标识INNER & CODE 在此不好做区分
     return list;
 }
 
