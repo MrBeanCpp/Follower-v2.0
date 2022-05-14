@@ -532,3 +532,9 @@
 
     解法2：
         QCompleter没有对widget的EventFilter做任何处理，所以重写lineEdit的keyPress即可，在有selectedText的时候阻止发出signal，并手动处理selection
+
+5-14：
+    新增百度翻译API (使用前缀'!')
+    在使用'@' or '!'时，不清除text，而是保留前缀以方便后续输入
+    翻译任务由codeEditor处理（因为executor不方便回调）
+    将关闭lineEdit时clearText的任务从widget转到lineEdit的hide事件（管好你自己）

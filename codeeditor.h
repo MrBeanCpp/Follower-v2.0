@@ -9,6 +9,7 @@
 #include "cmdlistwidget.h"
 #include "cacheiconprovider.h"
 #include <QCompleter>
+#include "request.h"
 struct PastCodeList {
     PastCodeList()
         : lineLimit(10), index(0) {}
@@ -77,6 +78,7 @@ private:
     //QFileIconProvider iconPro;
     CacheIconProvider iconPro;
     QCompleter* comp = nullptr;
+    Request request;
     //QClipboard* clipboard;
 
     const int normalWidth; //LineEditor宽度

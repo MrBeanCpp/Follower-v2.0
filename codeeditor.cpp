@@ -8,6 +8,7 @@
 #include <QString>
 #include <windows.h>
 #include <QDirModel>
+#include <QRegExp>
 CodeEditor::CodeEditor(int width, int height, QWidget* parent)
     : QLineEdit(parent), label(new QLabel(parent)), lw(new CMDListWidget(parent)), normalWidth(width), normalHeight(height)
 {
@@ -42,6 +43,7 @@ CodeEditor::CodeEditor(int width, int height, QWidget* parent)
 void CodeEditor::hideEvent(QHideEvent* event)
 {
     Q_UNUSED(event)
+    this->clear();
     label->hide();
     lw->hide();
     lw->clear();
@@ -203,16 +205,40 @@ void CodeEditor::returnPress()
         hideDisplay();
     } else {
         pastCodeList << text(); //加入历史记录
+
+        Executor::State state;
         if (lw->isVisible())
-            executor.run(lw->selectedText(), true); //带上extra一起匹配
+            state = executor.run(lw->selectedText(), true); //带上extra一起匹配
         else
-            executor.run(text());
+            state = executor.run(text());
 
         if (executor.hasText()) {
-            clear();
             QString echoText = executor.text();
-            QApplication::clipboard()->setText(echoText); //
-            showLabel(echoText + "\n-Clipboard-"); //自动拷贝进剪切板
+            if (state == Executor::JSCODE) {
+                setText(executor.JsMark); //setText不会触发edit信号（这也算好处）
+                QApplication::clipboard()->setText(echoText); //
+                showLabel(echoText + "\n-Clipboard-"); //自动拷贝进剪切板
+            } else if (state == Executor::TRANSLATE) {
+                static auto isEn = [](const QString& text) -> bool {
+                    static QRegExp reg("[A-Za-z0-9 ,.]+");
+                    return reg.exactMatch(text);
+                };
+
+                setText(executor.TransMark);
+                showLabel("Translate: " + echoText);
+                request.translate(
+                    echoText, [=](const QString& text) {
+                        if (isVisible() == false) return;
+
+                        if (text.isEmpty())
+                            showLabel("[WARN]Error or Timeout");
+                        else
+                            showLabel(echoText + ":\n" + text);
+                    },
+                    2000,
+                    "auto",
+                    isEn(echoText) ? "zh" : "en"); //自动识别
+            }
         } else {
             showLabel("#Command Over#");
             emit returnWithoutEcho();

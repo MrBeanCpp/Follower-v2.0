@@ -105,6 +105,8 @@ Executor::CmdSymbol Executor::symbol(const QString& str)
         return Inner_Cmd;
     else if (ch == JsMark)
         return Js_Cmd;
+    else if (ch == TransMark)
+        return Trans_Cmd;
     else
         return Normal_Cmd;
 }
@@ -134,6 +136,10 @@ Executor::State Executor::run(const QString& code, bool isWithExtra)
         QString body = code.simplified().mid(1);
         echoText = JsEngine.evaluate(body).toString();
         return JSCODE;
+    } else if (symbol(code) == Trans_Cmd) {
+        QString body = code.simplified().mid(1);
+        echoText = body.simplified();
+        return TRANSLATE;
     }
 
     if (isExistPath(code)) {
@@ -178,6 +184,12 @@ QList<QPair<QString, QString>> Executor::matchString(const QString& str, State* 
     if (symbol(str) == Js_Cmd) {
         echoText = "Inputing JavaScript Code...";
         if (state) *state = JSCODE;
+        return list;
+    }
+
+    if (symbol(str) == Trans_Cmd) {
+        echoText = "Inputing Sth. to Translate...";
+        if (state) *state = TRANSLATE;
         return list;
     }
 

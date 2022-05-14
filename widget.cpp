@@ -288,7 +288,6 @@ void Widget::setState(Widget::State toState, int step)
     hasNote = !sys->noteEditor->isEmpty(); //降低更新频率 防止反复读文件
 
     if (_state == INPUT) {
-        lineEdit->clear();
         lineEdit->silent();
     }
     if (toState == INPUT) {

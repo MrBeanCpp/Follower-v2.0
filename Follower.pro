@@ -2,6 +2,7 @@ QT       += core gui
 QT       += qml
 QT       += winextras
 QT       += concurrent
+QT       += network
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
@@ -33,6 +34,7 @@ SOURCES += \
     keystate.cpp \
     main.cpp \
     path.cpp \
+    request.cpp \
     systemapi.cpp \
     widget.cpp
 
@@ -51,6 +53,7 @@ HEADERS += \
     inputmethod.h \
     keystate.h \
     path.h \
+    request.h \
     systemapi.h \
     widget.h
 

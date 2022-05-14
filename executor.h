@@ -42,6 +42,7 @@ public:
         INNERCODE,
         CMD,
         JSCODE,
+        TRANSLATE,
         PATH
     };
     Executor(QObject* parent = nullptr);
@@ -63,11 +64,13 @@ private:
         Inner_Cmd,
         Normal_Cmd,
         Js_Cmd,
+        Trans_Cmd,
         Path_Cmd
     };
 
     const QChar InnerMark = '#';
     const QChar JsMark = '@';
+    const QChar TransMark = '!';
 
     QList<Command> cmdList;
     QList<InnerCommand> innerCmdList = { //CaseInsensitive
