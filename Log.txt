@@ -538,3 +538,7 @@
     在使用'@' or '!'时，不清除text，而是保留前缀以方便后续输入
     翻译任务由codeEditor处理（因为executor不方便回调）
     将关闭lineEdit时clearText的任务从widget转到lineEdit的hide事件（管好你自己）
+
+5-22：
+    去除无用QT+=qml模块（不知道为什么会加上）
+    不能去除啊aaa QJsEngine要用
