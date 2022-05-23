@@ -7,6 +7,8 @@
 
 额外功能：提醒事项、滚轮调节音量、键盘锁定、自动切换EN输入法、检测全屏等
 
+![Move](https://s1.ax1x.com/2022/05/23/X9uXdK.png)![Still](https://s1.ax1x.com/2022/05/23/X9KiLt.png)![Input](https://s1.ax1x.com/2022/05/23/X9KeJg.png)
+
 ## 详细介绍
 
 ### 命令分类
@@ -19,9 +21,13 @@
 
 无前缀：则主要用于匹配自定义命令，同时会识别绝对路径，如`C:\Windows`会打开对应文件夹，若均不匹配则尝试为`CMD`命令，如`shutdown -s -t 0`
 
+![Inputing](https://s1.ax1x.com/2022/05/23/X9K8oT.png)
+
 ### 主要功能（自定义命令）
 
 输入`#Edit cmd`打开自定义命令编辑窗口（`Ctrl+F`搜索），支持拖拽文件
+
+![Editor](https://s1.ax1x.com/2022/05/23/X9KITf.md.png)
 
 分为`Code`、`Extra`、`FileName`、`Parameter`四列
 
