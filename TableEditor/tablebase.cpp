@@ -20,6 +20,8 @@ TableBase::TableBase(const QString& Path, QWidget* parent)
     setAcceptDrops(true); //QTableWidget不接受拖放，只能由父窗体代劳
 
     ui->btn_save->setIcon(style()->standardIcon(QStyle::SP_DialogSaveButton));
+    ui->btn_save->resize(DPI(ui->btn_save->size()));
+    ui->btn_add->resize(DPI(ui->btn_add->size()));
 
     QFile qss(":/tableStyle.qss");
     if (qss.open(QFile::ReadOnly)) {
@@ -155,11 +157,12 @@ void TableBase::clear()
 void TableBase::resizeEvent(QResizeEvent* event) //用布局崩溃，原因不明
 {
     Q_UNUSED(event)
-    static const int Margin = 50;
+    static const int Margin = DPI(50);
+    static const int Margin_B = DPI(5);
     int c_X = this->width() - Margin / 2, c_Y = this->height() / 2; //；蓝色显眼
     table->resize(this->width() - Margin, this->height());
     ui->btn_add->move(c_X - ui->btn_add->width() / 2, c_Y - ui->btn_add->height() / 2);
-    ui->btn_save->move(c_X - ui->btn_save->width() / 2, height() - 25);
+    ui->btn_save->move(c_X - ui->btn_save->width() / 2, height() - ui->btn_save->width() - Margin_B);
 }
 
 void TableBase::dragEnterEvent(QDragEnterEvent* event)

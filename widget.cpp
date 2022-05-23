@@ -42,7 +42,7 @@ Widget::Widget(QWidget *parent)
     connect(pScreen, &QScreen::availableGeometryChanged, this, &Widget::updateScreenInfo);
 
     lineEdit = new CodeEditor(StateSize(INPUT).width() - 2 * Margin, StateSize(INPUT).height() - 2 * Margin, this);
-    lineEdit->move(5, 5);
+    lineEdit->move(Margin, Margin);
     lineEdit->silent();
 
     hasNote = !sys->noteEditor->isEmpty();
@@ -116,7 +116,7 @@ Widget::~Widget()
 
 bool Widget::moveGuide(QPoint dest, QPointF& pos, qreal limit)
 {
-    const qreal Rate = 2;
+    const qreal Rate = DPI(2);
     qreal x = pos.x(), y = pos.y();
     qreal Dx = dest.x() - x, Dy = dest.y() - y;
     qreal Dis = sqrt(Dx * Dx + Dy * Dy);
@@ -169,6 +169,7 @@ void Widget::changeSizeSlow(QSize size, int step, bool isAuto)
         step = qMax(qAbs(H - height) / StateSize(INPUT).height(), step);
     }
     if (!hasPower) step = qMax(step, 4); //断电加速
+    step = DPI(step);
     isChangingState = true;
     while (W != width || H != height) {
         W = W > width ? qMax(width, W - step) : qMin(width, W + step);
@@ -394,16 +395,21 @@ bool Widget::isOtherFullScreen()
 
 QSize Widget::StateSize(Widget::State _state)
 {
+    QSize size;
     switch (_state) {
     case STILL:
-        return { 100, 50 };
+        size = QSize(100, 50);
+        break;
     case MOVE:
-        return { 50, 50 };
+        size = QSize(50, 50);
+        break;
     case INPUT:
-        return { 200, 40 };
+        size = QSize(200, 40);
+        break;
     default:
-        return { -1, -1 };
+        size = QSize(-1, -1);
     }
+    return DPI(size);
 }
 
 void Widget::wrtieIni()
@@ -479,30 +485,30 @@ void Widget::paintEvent(QPaintEvent* event)
         painter.drawText(QRect(rect.left() + 1, rect.top() + 1, rect.right(), rect.bottom()), Qt::AlignCenter, ">_<"); //& 'ㅅ' Ծ‸Ծ ´ ᵕ `
     } else if (state == STILL) {
         painter.setFont(QFont("Consolas", 14));
-        painter.drawText(QRect(rect.left(), rect.top() + 8, rect.right(), rect.bottom()), Qt::AlignCenter, "Need?");
+        painter.drawText(QRect(rect.left(), rect.top() + DPI(8), rect.right(), rect.bottom()), Qt::AlignCenter, "Need?");
 
         painter.setFont(QFont("Consolas", 10));
-        painter.drawText(QRect(rect.left(), rect.top(), rect.right(), rect.bottom() - 18), Qt::AlignCenter, QTime::currentTime().toString());
+        painter.drawText(QRect(rect.left(), rect.top(), rect.right(), rect.bottom() - DPI(18)), Qt::AlignCenter, QTime::currentTime().toString());
     }
 
     static QPen pen;
-    pen.setWidth(6);
+    pen.setWidth(DPI(6));
     pen.setCapStyle(Qt::RoundCap); //圆形笔头，否则方形点
     if (state == MOVE || state == STILL) { //显示相关信息标识
         if (hasNote) {
             pen.setColor(QColor(200, 0, 0));
             painter.setPen(pen);
-            painter.drawPoint(8, 8);
+            painter.drawPoint(DPI(QPoint(8, 8)));
         }
         if (!hasPower) {
             pen.setColor(QColor(30, 85, 150));
             painter.setPen(pen);
-            painter.drawPoint(16, 8);
+            painter.drawPoint(DPI(QPoint(16, 8)));
         }
         if (Hook::isKeyLock()) {
             pen.setColor(QColor(214, 197, 64));
             painter.setPen(pen);
-            painter.drawPoint(8, StateSize(MOVE).height() - 8); //由于r为偶数，中心需要偏移 so no -1
+            painter.drawPoint(DPI(QPoint(8, StateSize(MOVE).height() - 8))); //由于r为偶数，中心需要偏移 so no -1
         }
     }
 }

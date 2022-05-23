@@ -17,7 +17,7 @@ CodeEditor::CodeEditor(int width, int height, QWidget* parent)
 
     setStyleSheet("QLineEdit{background-color:rgb(15,15,15);color:rgb(225,225,225);font-family:Consolas;font-size:14pt}");
 
-    label->setStyleSheet("QLabel{background-color:rgb(15,15,15);color:rgb(200,200,200);font-family:Consolas}");
+    label->setStyleSheet("QLabel{background-color:rgb(15,15,15);color:rgb(200,200,200);font-family:Consolas;font-size:9pt;}");
     label->hide();
 
     lw->hide();

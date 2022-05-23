@@ -6,6 +6,7 @@
 #include "path.h"
 #include <QObject>
 #include <QSystemTrayIcon>
+#define DPI(n) ((n)*sys->scaleRatio)
 class CmdEditor; //防止头文件相互包含 但可以在.cpp中
 class NoteEditor;
 
@@ -29,6 +30,7 @@ public:
     static GapTimer* gTimer;
     static CmdEditor* cmdEditor;
     static NoteEditor* noteEditor;
+    static qreal scaleRatio;
 };
 extern SystemAPI* sys;
 #endif // SYSTEMAPI_H

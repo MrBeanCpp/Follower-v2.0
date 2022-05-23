@@ -6,6 +6,7 @@
 #include <QDialog>
 #include <QMenu>
 #include <QString>
+#include "systemapi.h"
 namespace Ui {
 class TableBase;
 }

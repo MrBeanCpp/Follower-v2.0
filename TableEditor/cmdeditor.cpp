@@ -11,7 +11,7 @@ CmdEditor::CmdEditor(const QString& Path, QWidget* parent)
     : TableEditor(Path, parent)
 {
     setWindowTitle("Command-Editor");
-    resize(1000, height());
+    resize(DPI(QSize(1000, height())));
     //table->setColumnWidth(1, width() * (7 / 12.0));//in resizeEvent
     table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);

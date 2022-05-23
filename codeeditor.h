@@ -83,7 +83,7 @@ private:
 
     const int normalWidth; //LineEditor宽度
     const int normalHeight;
-    const int Margin = 5; //内部Margin，与主窗体无关
+    const int Margin = DPI(5); //内部Margin，与主窗体无关
     const int TextLimit = 128;
     const QString Holder_note = "note?";
 

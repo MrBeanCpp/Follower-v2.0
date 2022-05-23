@@ -23,13 +23,13 @@ NoteEditor::NoteEditor(const QString& path, QWidget* parent)
     table->setHorizontalHeaderLabels(QStringList() << "Notes"
                                                    << "Remind Time"
                                                    << "Repeat");
-    resize(950, height());
+    resize(DPI(QSize(950, height())));
     vScrollBar = table->verticalScrollBar();
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     //table->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
     btn_clear = new QToolButton(this);
-    btn_clear->resize(20, 20);
+    btn_clear->resize(DPI(QSize(20, 20)));
     btn_clear->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
 
     connect(sys->gTimer, &GapTimer::timeout, this, &NoteEditor::checkRemindTime);
@@ -258,7 +258,7 @@ bool NoteEditor::isEmpty()
 void NoteEditor::resizeEvent(QResizeEvent* event)
 {
     TableEditor::resizeEvent(event);
-    btn_clear->move(ui->btn_add->x(), 10);
+    btn_clear->move(ui->btn_add->x(), DPI(10));
 }
 
 bool NoteEditor::eventFilter(QObject* watched, QEvent* event)

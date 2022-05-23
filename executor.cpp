@@ -36,6 +36,7 @@ void Executor::openFile(const QString& filename, const QString& parameter, int n
     //ShellExecuteA(0, "open", filename.toLocal8Bit().constData(), parameter.toLocal8Bit().constData(), dirPath.toLocal8Bit().constData(), nShowMode);
     ShellExecuteW(0, L"open", filename.toStdWString().c_str(), parameter.toStdWString().c_str(), dirPath.toStdWString().c_str(), nShowMode);
     //宽字符(Unicode)才能完美转换，否则可能编码错误
+    //神奇现象：ShellExecute会新开线程，不返回虽然阻塞 但是事件循环继续进行
 }
 
 void Executor::editCmd()

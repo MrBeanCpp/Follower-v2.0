@@ -16,8 +16,8 @@ public:
 private:
     QToolButton* btn_clear = nullptr;
     const int Col = 3;
-    const int DateColWidth = 128;
-    const int RepeatColWidth = 70;
+    const int DateColWidth = DPI(128);
+    const int RepeatColWidth = DPI(70);
     const QString DateTimeFormat = "yyyy-MM-dd hh:mm";
     QScrollBar* vScrollBar;
     static const QStringList RepeatMode;

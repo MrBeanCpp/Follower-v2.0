@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QListWidget>
 #include <QList>
+#include "systemapi.h"
 class CMDListWidget : public QListWidget
 {
     Q_OBJECT
@@ -18,7 +19,7 @@ public:
     QString selectedText(void);
 
 private:
-    static constexpr int Item_H = 25;
+    const int Item_H = DPI(25);
     IconStrList listCache;
 
 signals:

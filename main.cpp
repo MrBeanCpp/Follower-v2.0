@@ -6,11 +6,13 @@
 #include <QSettings>
 #include <QSharedMemory>
 #include <QTimer>
+#include <QScreen>
 void init(void);
 void checkAutoStart(void);
 void checkSingleApp(void);
 int main(int argc, char *argv[])
 {
+    //QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication a(argc, argv);
     SystemAPI sysAPI; //用以初始化sys全局指针,like qApp
     init();

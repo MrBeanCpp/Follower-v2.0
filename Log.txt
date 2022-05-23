@@ -542,3 +542,11 @@
 5-22：
     去除无用QT+=qml模块（不知道为什么会加上）
     不能去除啊aaa QJsEngine要用
+
+5-23：
+    #高DPI适配：QApplication::setAttribute(Qt::AA_EnableHighDpiScaling)效果差，鼠标定位失效
+    故手动调节px（计算DPI/96）
+    注：字体使用pt单位，可自适应
+
+    ## 神奇现象：ShellExecute会新开线程，不返回虽然阻塞 但是事件循环继续进行（如资源管理器 失去响应会导致ShellExecute不返回 但主循环不会卡住 而线程增加）
+

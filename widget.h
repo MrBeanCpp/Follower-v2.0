@@ -27,7 +27,7 @@ private:
 private:
     QPointF winPos; //center pos
     const qreal disLimit = 10;
-    const int Margin = 5; //between MainWindow and LineEditor
+    const int Margin = DPI(5); //between MainWindow and LineEditor
     HWND Hwnd;
     QRect Screen;
     QRect validScreen;

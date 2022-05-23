@@ -7,6 +7,7 @@
 #include <QDir>
 #include <QMenu>
 #include <QTimer>
+#include <QScreen>
 SystemAPI* sys = nullptr;
 
 QSystemTrayIcon* SystemAPI::sysTray = nullptr;
@@ -14,6 +15,8 @@ InputMethod* SystemAPI::inputM = nullptr;
 GapTimer* SystemAPI::gTimer = nullptr;
 CmdEditor* SystemAPI::cmdEditor = nullptr;
 NoteEditor* SystemAPI::noteEditor = nullptr;
+qreal SystemAPI::scaleRatio = 1.0;
+
 SystemAPI::SystemAPI(QObject* parent)
     : QObject(parent)
 { //need a function to delete these pointers(InputMethod is not a QObject but it Can be)//或者采用shared_ptr调用SystemAPI析构
@@ -42,6 +45,8 @@ SystemAPI::~SystemAPI()
 void SystemAPI::Init()
 {
     QDir().mkdir(Path::dirPath()); //Core-Info
+    scaleRatio = qApp->primaryScreen()->logicalDotsPerInch() / 96; //high DPI scale
+    qDebug() << scaleRatio;
 }
 
 void SystemAPI::Init_SystemTray()

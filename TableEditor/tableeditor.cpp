@@ -9,6 +9,7 @@ TableEditor::TableEditor(const QString& Path, QWidget* parent)
     : TableBase(Path, parent)
 {
     table->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    table->verticalHeader()->setMinimumHeight(DPI(20));
 }
 
 void TableEditor::readFile(const QString& path)
