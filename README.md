@@ -7,7 +7,7 @@
 
 额外功能：提醒事项、滚轮调节音量、键盘锁定、自动切换EN输入法、检测全屏等
 
-![Move](https://s1.ax1x.com/2022/05/23/X9uXdK.png)![Still](https://s1.ax1x.com/2022/05/23/X9KiLt.png)![Input](https://s1.ax1x.com/2022/05/23/X9KeJg.png)
+![Move](https://s1.ax1x.com/2022/05/23/X9uXdK.png)  ![Still](https://s1.ax1x.com/2022/05/23/X9KiLt.png)  ![Input](https://s1.ax1x.com/2022/05/23/X9KeJg.png)
 
 ## 详细介绍
 
