@@ -18,6 +18,9 @@
 #include <QTimer>
 #include <QtWin>
 #include <cmath>
+#include <QMimeData>
+#include <QClipboard>
+#include "WinUtility.h"
 #define GetKey(X) (GetAsyncKeyState(X) & 0x8000)
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -32,7 +35,7 @@ Widget::Widget(QWidget *parent)
     setStyleSheet("QWidget#Widget{background-color:rgb(15,15,15);}");
     resize(StateSize(MOVE));
 
-    winPos = leftTopToCenter(QPoint(geometry().x(),geometry().y()));
+    winPos = geometry().center();
     Hwnd = HWND(winId());
     hasPower = true; //用以强调断电
 
@@ -75,9 +78,9 @@ Widget::Widget(QWidget *parent)
 
         sys->inputM->checkAndSetEn(); //En输入法//降低更新频率
 
-        if (hasPower && !(hasPower = isInPower())) //降低更新频率,防止反复调用 Win API
+        if (hasPower && !(hasPower = Win::isPowerOn())) //降低更新频率,防止反复调用 Win API
             sys->sysTray->showMessage("Little Tip", "Power Down");
-        else if (!hasPower && (hasPower = isInPower()))
+        else if (!hasPower && (hasPower = Win::isPowerOn()))
             sys->sysTray->showMessage("Little Tip", "Power Up");
     });
     timer_beat->start(1000);
@@ -144,7 +147,7 @@ bool Widget::moveWindow()
 {
     bool isMove = moveGuide(QCursor::pos(), winPos, disLimit);
     if (isMove && isState(MOVE) && !isMinimized())
-        move(centerToLeftTop(winPos.toPoint()));
+        move(centerToLT(winPos.toPoint()));
     return isMove;
 }
 
@@ -181,33 +184,6 @@ void Widget::changeSizeSlow(QSize size, int step, bool isAuto)
     isChangingState = false;
 }
 
-void Widget::initSizeTimer() //废弃-------------------------------------------------------
-{
-    if (timer_w && timer_h) return;
-    timer_w = new QTimeLine(500, this);
-    timer_h = new QTimeLine(500, this);
-    timer_w->setUpdateInterval(10);
-    timer_h->setUpdateInterval(10);
-    connect(timer_w, &QTimeLine::frameChanged, [=](int frame) {setFixedWidth(frame);repaint(); });
-    connect(timer_h, &QTimeLine::frameChanged, [=](int frame) {setFixedHeight(frame);repaint(); });
-}
-
-void Widget::changeSizeEx(QSize size, int dur) //废弃-------------------------------------------
-{
-    if (timer_w || timer_h) {
-        qDebug() << "timer_w|h is null";
-        return;
-    }
-    //timer_w->stop();
-    //timer_h->stop();
-    timer_w->setDuration(dur);
-    timer_h->setDuration(dur);
-    timer_w->setFrameRange(width(), size.width());
-    timer_h->setFrameRange(height(), size.height());
-    timer_w->start();
-    timer_h->start();
-}
-
 void Widget::updateWindow()
 {
     //qDebug() << QTime::currentTime();
@@ -218,27 +194,32 @@ void Widget::updateWindow()
     case MOVE:
         isTeleport = false;
         if (KeyState::isRelease(VK_MBUTTON, 500) && teleportMode != OFF) {
-            if (teleportMode == ON || (teleportMode == AUTO && !isOtherFullScreen()))
+            if (teleportMode == ON || (teleportMode == AUTO && !Win::isForeFullScreen()))
                 teleport(), isTeleport = true;
         } else if (isTeleportKey()) { //键盘快捷键无视全屏
             teleportKeyDown = false; //复位
             teleport(), isTeleport = true;
         }
         if (isTeleport) {
-            setState(STILL, 4); //Teleport后加速，防止伸缩动画时无法检测按键
+            if (tClip.lastTextChangeToNow() < 1000) { //在Teleport命令前1000ms内复制文本 视为希望翻译(用户意愿)
+                setState(INPUT, 4);
+                lineEdit->setText('!' + tClip.text());
+                emit lineEdit->returnPressed();
+            } else
+                setState(STILL, 4); //Teleport后加速，防止伸缩动画时无法检测按键
             break;
         }
 
-        if (!isTopWindow() && isTopMost()) //若焦点转移则取消置顶
+        if (!Win::isForeWindow(Hwnd) && Win::isTopMost(Hwnd)) //若焦点转移则取消置顶
             setAlwaysTop(false);
 
         isMove = moveWindow();
-        if (!isMove && isDownToCursor())
+        if (!isMove && isUnderCursor())
             setState(STILL);
         break;
     case STILL:
-        if (isDownToCursor() && (KeyState::isDowning(VK_LBUTTON) || KeyState::isPress(VK_SPACE))) {
-            setState(INPUT, 2);
+        if (isUnderCursor() && (KeyState::isDowning(VK_LBUTTON) || KeyState::isPress(VK_SPACE))) {
+            setState(INPUT, 3);
             break;
         } else if (KeyState::isRelease(VK_RBUTTON) || KeyState::isRelease(VK_ESCAPE) || KeyState::isRelease(VK_BACK)) {
             //hide(); //setWindowState(Qt::WindowMinimized);
@@ -248,13 +229,13 @@ void Widget::updateWindow()
         }
         if (isCursorInWindow()) break;
         isMove = moveWindow();
-        if (isMove || !isDownToCursor()) setState(MOVE);
+        if (isMove || !isUnderCursor()) setState(MOVE);
         break;
     case INPUT:
-        if (((isGetMouseButton()) && !isDownToCursor()) || isTeleportKey()) {
+        if (((isGetMouseButton()) && !isUnderCursor()) || isTeleportKey()) {
             teleportKeyDown = false;
             setState(MOVE, 2);
-        } else if ((KeyState::isRelease(VK_RBUTTON) && isDownToCursor()) || KeyState::isRelease(VK_ESCAPE) || (lineEdit->text().isEmpty() && KeyState::isDowning(VK_CONTROL) && KeyState::isRelease(VK_BACK))) {
+        } else if ((KeyState::isRelease(VK_RBUTTON) && isUnderCursor()) || KeyState::isRelease(VK_ESCAPE) || (lineEdit->text().isEmpty() && KeyState::isDowning(VK_CONTROL) && KeyState::isRelease(VK_BACK))) {
             setState(STILL, 2); //右键||ESC||Ctrl+BackSpace&空文本
         }
         break;
@@ -263,14 +244,9 @@ void Widget::updateWindow()
     }
 }
 
-QPoint Widget::centerToLeftTop(const QPoint& pos)
+QPoint Widget::centerToLT(const QPoint& pos)
 {
     return { pos.x() - width() / 2, pos.y() - height() / 2 };
-}
-
-QPoint Widget::leftTopToCenter(const QPoint& pos)
-{
-    return { pos.x() + width() / 2, pos.y() + height() / 2 };
 }
 
 bool Widget::isCursorInWindow()
@@ -302,36 +278,9 @@ void Widget::setState(Widget::State toState, int step)
     //changeSizeEx(StateSize(toState));
 }
 
-bool Widget::isTopWindow()
+bool Widget::isUnderCursor()
 {
-    return GetForegroundWindow() == Hwnd;
-}
-
-HWND Widget::topWindowFromPoint(QPoint pos)
-{
-    HWND hwnd = WindowFromPoint({ pos.x(), pos.y() });
-    while (GetParent(hwnd) != NULL)
-        hwnd = GetParent(hwnd);
-    return hwnd;
-}
-
-bool Widget::isDownToCursor()
-{
-    HWND hwnd = topWindowFromPoint(QCursor::pos());
-    return hwnd == Hwnd;
-}
-
-void Widget::sendKey(BYTE bVK)
-{
-    keybd_event(bVK, 0, 0, 0);
-    keybd_event(bVK, 0, KEYEVENTF_KEYUP, 0);
-}
-
-bool Widget::isInPower()
-{
-    static SYSTEM_POWER_STATUS powerSatus;
-    GetSystemPowerStatus(&powerSatus);
-    return powerSatus.ACLineStatus;
+    return Win::isUnderCursor(Hwnd);
 }
 
 bool Widget::isState(Widget::State _state) //确认实际状态，防止中间态迷惑判断
@@ -360,7 +309,7 @@ void Widget::updateScreenInfo()
 void Widget::teleport()
 {
     winPos = QCursor::pos();
-    move(centerToLeftTop(winPos.toPoint()));
+    move(centerToLT(winPos.toPoint()));
     catchFocus();
     setAlwaysTop(); //置顶
 }
@@ -377,20 +326,6 @@ void Widget::catchFocus()
     setWindowState(Qt::WindowActive);
     activateWindow();
     SwitchToThisWindow(Hwnd, true); //冗余双保险
-}
-
-bool Widget::isOtherFullScreen()
-{
-    HWND Hwnd = GetForegroundWindow();
-
-    HWND H_leftBottom = topWindowFromPoint(Screen.bottomLeft()); //获取左下角像素所属窗口，非全屏是任务栏
-    if (Hwnd != H_leftBottom) return false;
-
-    RECT Rect;
-    GetWindowRect(Hwnd, &Rect);
-    if (Rect.right - Rect.left >= Screen.width() && Rect.bottom - Rect.top >= Screen.height()) //确保窗口大小(二重验证)
-        return true;
-    return false;
 }
 
 QSize Widget::StateSize(Widget::State _state)
@@ -464,13 +399,6 @@ void Widget::setAlwaysTop(bool bTop)
     if (Hwnd) //必须要用HWND_BOTTOM HWND_NOTOPMOST 无效（依旧top）：将窗口置于所有非顶层窗口之上（即在所有顶层窗口之后）
         SetWindowPos(Hwnd, bTop ? HWND_TOPMOST : HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW); //持续置顶
     qDebug() << "setTop:" << bTop;
-}
-
-bool Widget::isTopMost()
-{
-    if (Hwnd == nullptr) return false;
-    LONG_PTR style = GetWindowLongPtrW(Hwnd, GWL_EXSTYLE);
-    return style & WS_EX_TOPMOST;
 }
 
 void Widget::paintEvent(QPaintEvent* event)
@@ -547,7 +475,8 @@ void Widget::mouseReleaseEvent(QMouseEvent* event)
 void Widget::wheelEvent(QWheelEvent* event)
 {
     if (isState(STILL))
-        event->delta() > 0 ? sendKey(VK_VOLUME_UP) : sendKey(VK_VOLUME_DOWN);
+        Win::simulateKeyEvent(QList<BYTE> { BYTE(event->delta() > 0 ? VK_VOLUME_UP : VK_VOLUME_DOWN) });
+    //event->delta() > 0 ? sendKey(VK_VOLUME_UP) : sendKey(VK_VOLUME_DOWN);
 }
 
 bool Widget::nativeEvent(const QByteArray& eventType, void* message, long* result)

@@ -9,6 +9,7 @@
 #include <QWidget>
 #include <systemapi.h>
 #include <windows.h>
+#include "timeclipboard.h"
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
 QT_END_NAMESPACE
@@ -59,12 +60,11 @@ private:
     int HotKeyId;
     ATOM Atom;
 
-    QTimeLine* timer_w = nullptr;
-    QTimeLine* timer_h = nullptr;
-
     //SystemAPI sys;
 
     const QString iniFilePath = Path::iniFile();
+
+    TimeClipboard tClip { 128 }; //记录textChangeTime的ClipBoard
 
 private:
     inline bool moveGuide(QPoint dest, QPointF& pos, qreal limit);
@@ -72,32 +72,23 @@ private:
     inline void getInputFocus(void);
     inline void catchFocus(void);
     void changeSizeSlow(QSize size, int step = 1, bool isAuto = false); //auto
-    void initSizeTimer(void); //废弃-----------------
-    void changeSizeEx(QSize size, int dur = 200); //废弃----------------
     void updateWindow(void);
-    inline QPoint centerToLeftTop(const QPoint& pos);
-    inline QPoint leftTopToCenter(const QPoint& pos);
+    inline QPoint centerToLT(const QPoint& pos);
     inline bool isCursorInWindow(void);
     inline void setState(State toState, int step = 1);
-    inline bool isTopWindow(void);
-    inline HWND topWindowFromPoint(QPoint pos);
-    inline bool isDownToCursor(void);
-    inline void sendKey(BYTE bVK);
-    inline bool isInPower(void);
+    inline bool isUnderCursor(void);
     inline bool isState(State _state);
     inline bool isGetMouseButton(void); //LBUTTON || MBUTTON || RBUTTON
     inline bool isTeleportKey(void); //Ctrl+Shift+E
     inline void updateScreenInfo(void);
     inline void teleport(void); //瞬移
     inline void setTeleportMode(TeleportMode mode);
-    bool isOtherFullScreen(void);
     QSize StateSize(State _state);
     void wrtieIni(void);
     void readIni(void);
     void Init_SystemTray(void);
     void registerHotKey(void);
     void setAlwaysTop(bool bTop = true);
-    bool isTopMost(void);
 
     // QWidget interface
 protected:

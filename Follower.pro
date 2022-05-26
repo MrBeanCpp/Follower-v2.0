@@ -24,6 +24,7 @@ SOURCES += \
     TableEditor/noteeditor.cpp \
     TableEditor/tablebase.cpp \
     TableEditor/tableeditor.cpp \
+    WinUtility.cpp \
     cacheiconprovider.cpp \
     cmdlistwidget.cpp \
     codeeditor.cpp \
@@ -36,6 +37,7 @@ SOURCES += \
     path.cpp \
     request.cpp \
     systemapi.cpp \
+    timeclipboard.cpp \
     widget.cpp
 
 HEADERS += \
@@ -44,6 +46,7 @@ HEADERS += \
     TableEditor/noteeditor.h \
     TableEditor/tablebase.h \
     TableEditor/tableeditor.h \
+    WinUtility.h \
     cacheiconprovider.h \
     cmdlistwidget.h \
     codeeditor.h \
@@ -55,6 +58,7 @@ HEADERS += \
     path.h \
     request.h \
     systemapi.h \
+    timeclipboard.h \
     widget.h
 
 FORMS += \

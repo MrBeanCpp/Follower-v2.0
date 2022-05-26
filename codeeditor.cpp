@@ -216,8 +216,8 @@ void CodeEditor::returnPress()
             QString echoText = executor.text();
             if (state == Executor::JSCODE) {
                 setText(executor.JsMark); //setText不会触发edit信号（这也算好处）
-                QApplication::clipboard()->setText(echoText); //
-                showLabel(echoText + "\n-Clipboard-"); //自动拷贝进剪切板
+                QApplication::clipboard()->setText(echoText); //自动拷贝进剪切板
+                showLabel(echoText + "\n-Clipboard-"); //
             } else if (state == Executor::TRANSLATE) {
                 static auto isEn = [](const QString& text) -> bool {
                     static QRegExp reg("[A-Za-z0-9 ,.]+");
@@ -232,8 +232,10 @@ void CodeEditor::returnPress()
 
                         if (text.isEmpty())
                             showLabel("[WARN]Error or Timeout");
-                        else
+                        else {
+                            QApplication::clipboard()->setText(text);
                             showLabel(echoText + ":\n" + text);
+                        }
                     },
                     2000,
                     "auto",

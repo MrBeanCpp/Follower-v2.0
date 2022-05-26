@@ -550,3 +550,13 @@
 
     ## 神奇现象：ShellExecute会新开线程，不返回虽然阻塞 但是事件循环继续进行（如资源管理器 失去响应会导致ShellExecute不返回 但主循环不会卡住 而线程增加）
 
+5-25：
+    在Teleport前1000ms内复制文本，则视为希望进行翻译
+    PS：为什么不做Teleport自动复制文本？ 因为需要延时 & 快捷键会干扰Ctrl+C，诸多不便
+    （注意不要用Time 改为DateTime 否则过午夜就会寄）
+
+5-26：
+    STILL->INPUT step 2->3
+    增加翻译后加入剪切板
+    封装TimeClipboard类
+    #使用WinUtility重构widget 减少代码量
