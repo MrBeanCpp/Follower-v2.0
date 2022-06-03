@@ -72,3 +72,7 @@
 ## Log
 
 详情参见Log.txt
+
+## 注
+
+Https下载 需要openssl的支持（自行下载dll）

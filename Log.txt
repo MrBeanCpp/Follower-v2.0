@@ -560,3 +560,11 @@
     增加翻译后加入剪切板
     封装TimeClipboard类
     #使用WinUtility重构widget 减少代码量
+
+6-3：
+    ##新增自动更新程序：
+        从gitee\release页面下载html并解析最新的zip Url & version
+        使用http get下载（注意重定向）
+        关闭自身并用.bat延时启动7z解压&替换
+    Warn:Https下载 需要openssl的支持（自行下载dll）
+    &加入版本系统（每次要记得改版本号呀！）

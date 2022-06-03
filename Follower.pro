@@ -38,6 +38,7 @@ SOURCES += \
     request.cpp \
     systemapi.cpp \
     timeclipboard.cpp \
+    updateform.cpp \
     widget.cpp
 
 HEADERS += \
@@ -59,10 +60,12 @@ HEADERS += \
     request.h \
     systemapi.h \
     timeclipboard.h \
+    updateform.h \
     widget.h
 
 FORMS += \
     tablebase.ui \
+    updateform.ui \
     widget.ui
 
 # Default rules for deployment.
