@@ -369,14 +369,24 @@ void Widget::readIni() //文件不存在时，读取文件不会创建，写文�
 void Widget::Init_SystemTray()
 {
     QMenu* menu = new QMenu(this);
-    menu->setStyleSheet("QMenu{background-color:rgb(15,15,15);color:rgb(220,220,220);}"
+    menu->setStyleSheet("QMenu{background-color:rgb(45,45,45);color:rgb(220,220,220);border:1px solid white;}"
                         "QMenu:selected{background-color:rgb(60,60,60);}");
+
+    QAction* act_autoStart = new QAction("AutoStart", menu);
     QAction* act_update = new QAction("Update", menu);
     QAction* act_about = new QAction("About", menu);
     QAction* act_quit = new QAction("Peace Out", menu);
+    menu->addAction(act_autoStart);
     menu->addAction(act_update);
     menu->addAction(act_about);
     menu->addAction(act_quit);
+
+    act_autoStart->setCheckable(true);
+    act_autoStart->setChecked(Win::isAutoRun(AppName));
+    connect(act_autoStart, &QAction::toggled, [=](bool checked) {
+        Win::setAutoRun(AppName, checked);
+        sys->sysTray->showMessage("Tip", checked ? "已添加启动项" : "已移除启动项");
+    });
     connect(act_update, &QAction::triggered, [=]() {
         static UpdateForm* updateForm = new UpdateForm(nullptr); //不能把this作为parent 否则最小化会同步 （这不算内存泄露吧 周期同步
         updateForm->show();

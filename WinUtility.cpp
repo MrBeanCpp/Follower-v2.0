@@ -5,6 +5,8 @@
 #include <psapi.h>
 #include <QScreen>
 #include <QApplication>
+#include <QSettings>
+#include <QDir>
 void Win::setAlwaysTop(HWND hwnd, bool isTop)
 {
     SetWindowPos(hwnd, isTop ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW); //持续置顶
@@ -164,4 +166,23 @@ bool Win::isForeFullScreen()
     if (Rect.right - Rect.left >= Screen.width() && Rect.bottom - Rect.top >= Screen.height()) //确保窗口大小(二重验证)
         return true;
     return false;
+}
+
+void Win::setAutoRun(const QString& AppName, bool isAuto)
+{
+    static const QString Reg_AutoRun = "HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"; //HKEY_CURRENT_USER仅仅对当前用户有效，但不需要管理员权限
+    static const QString AppPath = QDir::toNativeSeparators(QApplication::applicationFilePath());
+    QSettings reg(Reg_AutoRun, QSettings::NativeFormat);
+    if (isAuto)
+        reg.setValue(AppName, AppPath);
+    else
+        reg.remove(AppName);
+}
+
+bool Win::isAutoRun(const QString& AppName)
+{
+    static const QString Reg_AutoRun = "HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"; //HKEY_CURRENT_USER仅仅对当前用户有效，但不需要管理员权限
+    static const QString AppPath = QDir::toNativeSeparators(QApplication::applicationFilePath());
+    QSettings reg(Reg_AutoRun, QSettings::NativeFormat);
+    return reg.value(AppName).toString() == AppPath;
 }

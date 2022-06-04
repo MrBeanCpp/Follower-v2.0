@@ -60,6 +60,8 @@ private:
     int HotKeyId;
     ATOM Atom;
 
+    const QString AppName = "Follower v2.0";
+
     //SystemAPI sys;
 
     const QString iniFilePath = Path::iniFile();

@@ -27,6 +27,8 @@ public:
     static bool isUnderCursor(HWND Hwnd);
     static bool isPowerOn(void);
     static bool isForeFullScreen(void);
+    static void setAutoRun(const QString& AppName, bool isAuto);
+    static bool isAutoRun(const QString& AppName);
 };
 
 #endif // WIN_H

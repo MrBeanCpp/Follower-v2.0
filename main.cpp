@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 void init(void)
 {
     checkSingleApp(); //检测重复启动
-    checkAutoStart(); //检测自启动
+    //checkAutoStart(); //检测自启动
 }
 void checkAutoStart()
 {
