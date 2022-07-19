@@ -179,8 +179,13 @@ void Widget::changeSizeSlow(QSize size, int step, bool isAuto)
         W = W > width ? qMax(width, W - step) : qMin(width, W + step);
         H = H > height ? qMax(height, H - step) : qMin(height, H + step);
         resize(W, H);
-        repaint();
-        Sleep(1);
+        repaint(); //wallpaper GPU占用高会影响paint时间
+        //Sleep(1);//放弃时间片后 os返回的时间不确定 与CPU频率占用率有关 不可靠
+        QElapsedTimer t;
+        t.start();
+        while (t.nsecsElapsed() < 0.8e6) //1 ms = 1e6 ns
+            ; //死循环延时 可烤(靠)
+        //且不能进入事件循环 否则Follower的移动可能出bug
     }
     isChangingState = false;
 }

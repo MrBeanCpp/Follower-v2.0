@@ -571,3 +571,10 @@
 
 6-4：
     新增可选开机启动项（用户权益什么的...）
+
+6-9：
+    cmdlistwidget 删除多线程，非GUI线程setIcon可能导致异常退出
+
+7-19：
+    改：changeSizeSlow中的延时函数Sleep()改为纳秒级死循环(掌握CPU)
+    //Sleep让出时间片后 OS返回时间不确定 延时效果不精确

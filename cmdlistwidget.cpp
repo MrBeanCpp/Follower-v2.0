@@ -40,16 +40,18 @@ void CMDListWidget::addIconItems(const IconStrList& list) //貌似加载不同�
     adjustSizeEx();
 
     QTimer::singleShot(0, [=]() { //进入事件队列 在首次渲染list完成后再add Icon
-        QtConcurrent::run([=]() {
-            QTime t = tModify; //static 无需捕获
-            int rows = count();
-            if (!isVisible()) return;
-            if (listCache.size() != rows) return;
-            for (int i = 0; i < rows; i++) {
-                if (t != tModify) return; //listCache被修改
-                item(i)->setIcon(listCache[i].first); //setIcon不耗时，渲染耗时
-            }
-        });
+        //QtConcurrent::run([=]() {
+        qApp->processEvents();
+        QTime t = tModify; //static 无需捕获
+        int rows = count();
+        if (!isVisible()) return;
+        if (listCache.size() != rows) return;
+        for (int i = 0; i < rows; i++) {
+            if (t != tModify) return; //listCache被修改
+            item(i)->setIcon(listCache[i].first); //setIcon不耗时，渲染耗时
+            //qApp->processEvents();
+        }
+        //});
     });
 }
 
