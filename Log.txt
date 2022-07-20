@@ -578,3 +578,7 @@
 7-19：
     改：changeSizeSlow中的延时函数Sleep()改为纳秒级死循环(掌握CPU)
     //Sleep让出时间片后 OS返回时间不确定 延时效果不精确
+
+7-20：
+    updateForm：增加描述信息
+    & html解析的结果改为QMap返回

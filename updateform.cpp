@@ -79,7 +79,7 @@ void UpdateForm::download(const QUrl& url, const QString& path, std::function<vo
     });
 }
 
-void UpdateForm::getDownloadUrl(const QString& htmlUrl, std::function<void(const QString&, const QString&)> todo)
+void UpdateForm::getDownloadUrl(const QString& htmlUrl, std::function<void(QMap<QString, QString>)> todo)
 {
     QNetworkRequest request { QUrl(htmlUrl) }; //{}否则被误认为函数声明
     QNetworkReply* reply = manager->get(request);
@@ -89,33 +89,42 @@ void UpdateForm::getDownloadUrl(const QString& htmlUrl, std::function<void(const
         reply->deleteLater();
 
         QString html(reply->readAll());
-        QString url, version;
-
+        QMap<QString, QString> res;
         if (html.isEmpty()) {
-            todo("", "");
+            todo(res);
         } else {
-            parseHtml(html, url, version);
-            todo(url, version);
+            res = parseHtml(html);
+            todo(res);
         }
     });
 }
 
-void UpdateForm::parseHtml(const QString& html, QString& url, QString& version)
+QMap<QString, QString> UpdateForm::parseHtml(const QString& html)
 {
+    QMap<QString, QString> res;
+
     QRegExp reg("<div class='ui celled list releases-download-list'>\\n<div class='item'>\\n<a href=\"(.*)\"");
     reg.setMinimal(true);
     reg.indexIn(html);
-    url = "https://gitee.com" + reg.cap(1);
+    res["url"] = "https://gitee.com" + reg.cap(1);
 
     reg.setPattern("<a class=\"download-archive\" data-ref=\"(.*)\"");
     reg.indexIn(html);
-    version = reg.cap(1);
+    res["version"] = reg.cap(1);
+
+    reg.setPattern("<div class='markdown-body'>\\n<p>(.*)</p>");
+    reg.indexIn(html);
+    res["desc"] = reg.cap(1).replace(QString("<br>&#x000A;"), QChar('\n'));
+
+    return res;
 }
 
 void UpdateForm::updateLatestGiteeRelease(const QString& releaseUrl, const QString& filePath)
 {
     ui->btn_auto->setEnabled(false);
-    getDownloadUrl(releaseUrl, [=](const QString& url, const QString& version) {
+    getDownloadUrl(releaseUrl, [=](QMap<QString, QString> res) {
+        QString url = res["url"];
+        QString version = res["version"];
         qDebug() << url;
         qDebug() << version;
 
@@ -160,9 +169,13 @@ void UpdateForm::writeBat(const QString& batPath, const QString& zipPath, const 
 void UpdateForm::showEvent(QShowEvent* event)
 {
     Q_UNUSED(event)
-    getDownloadUrl(releaseUrl, [=](const QString& url, const QString& version) {
-        Q_UNUSED(url)
-        ui->label->setText(QString("当前版本：%1\n最新版本：%2").arg(ver).arg(version));
-        ui->btn_auto->setEnabled(ver != version);
+    getDownloadUrl(releaseUrl, [=](QMap<QString, QString> res) {
+        if (res.empty())
+            ui->label->setText("ERROR:empty result");
+        else {
+            ui->label->setText(QString("当前版本：%1\n最新版本：%2\n\n%3").arg(ver).arg(res["version"]).arg(res["desc"]));
+            ui->btn_auto->setEnabled(ver != res["version"]);
+        }
+        ui->label->adjustSize();
     });
 }

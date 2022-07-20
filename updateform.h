@@ -22,8 +22,8 @@ public:
 
     QUrl getRedirectTarget(QNetworkReply* reply);
     void download(const QUrl& url, const QString& path, std::function<void(bool)> todo);
-    void getDownloadUrl(const QString& htmlUrl, std::function<void(const QString&, const QString&)> todo);
-    void parseHtml(const QString& html, QString& url, QString& version);
+    void getDownloadUrl(const QString& htmlUrl, std::function<void(QMap<QString, QString>)> todo);
+    QMap<QString, QString> parseHtml(const QString& html);
     void updateLatestGiteeRelease(const QString& releaseUrl, const QString& filePath);
     void writeBat(const QString& batPath, const QString& zipPath, const QString& folder);
 
@@ -32,7 +32,7 @@ private:
     QNetworkAccessManager* manager = nullptr;
     const QString releaseUrl = "https://gitee.com/mrbeanc/follower-v2.0/releases";
 
-    const QString ver = "v2.4.0";
+    const QString ver = "v2.4.1";
 
     // QWidget interface
 protected:
