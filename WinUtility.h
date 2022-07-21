@@ -29,6 +29,7 @@ public:
     static bool isForeFullScreen(void);
     static void setAutoRun(const QString& AppName, bool isAuto);
     static bool isAutoRun(const QString& AppName);
+    static void adjustBrightness(bool isUp, int delta = 10);
 };
 
 #endif // WIN_H

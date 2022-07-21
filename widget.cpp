@@ -496,8 +496,14 @@ void Widget::mouseReleaseEvent(QMouseEvent* event)
 
 void Widget::wheelEvent(QWheelEvent* event)
 {
-    if (isState(STILL))
-        Win::simulateKeyEvent(QList<BYTE> { BYTE(event->delta() > 0 ? VK_VOLUME_UP : VK_VOLUME_DOWN) });
+    if (isState(STILL)) {
+        bool rollUp = event->delta() > 0;
+        if (event->modifiers() & Qt::ControlModifier) {
+            Win::adjustBrightness(rollUp); //阻塞
+            sys->sysTray->showMessage("Brightness Changed", QString("Brightness %1").arg(rollUp ? "UP" : "DOWN"), QSystemTrayIcon::Information, 500);
+        } else
+            Win::simulateKeyEvent(QList<BYTE> { BYTE(rollUp ? VK_VOLUME_UP : VK_VOLUME_DOWN) });
+    }
     //event->delta() > 0 ? sendKey(VK_VOLUME_UP) : sendKey(VK_VOLUME_DOWN);
 }
 

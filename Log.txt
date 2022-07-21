@@ -582,3 +582,7 @@
 7-20：
     updateForm：增加描述信息
     & html解析的结果改为QMap返回
+
+7-21：
+    STILL界面：Ctrl+滚轮调节屏幕亮度（PowerShell）
+    &弹窗提醒

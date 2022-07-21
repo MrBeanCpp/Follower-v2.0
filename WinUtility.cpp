@@ -7,6 +7,7 @@
 #include <QApplication>
 #include <QSettings>
 #include <QDir>
+#include <QProcess>
 void Win::setAlwaysTop(HWND hwnd, bool isTop)
 {
     SetWindowPos(hwnd, isTop ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW); //持续置顶
@@ -185,4 +186,19 @@ bool Win::isAutoRun(const QString& AppName)
     static const QString AppPath = QDir::toNativeSeparators(QApplication::applicationFilePath());
     QSettings reg(Reg_AutoRun, QSettings::NativeFormat);
     return reg.value(AppName).toString() == AppPath;
+}
+
+void Win::adjustBrightness(bool isUp, int delta)
+{
+    QProcess process;
+    process.setProgram("Powershell");
+    process.setArguments(QStringList() << "-Command"
+                                       << QString("&{$info = Get-Ciminstance -Namespace root/WMI -ClassName WmiMonitorBrightness;"
+                                                  "$monitor = Get-WmiObject -ns root/wmi -class wmiMonitorBrightNessMethods;"
+                                                  "$monitor.WmiSetBrightness(0,$info.CurrentBrightness %1 %2)}")
+                                              .arg(isUp ? '+' : '-')
+                                              .arg(delta));
+    process.start();
+    process.waitForFinished();
+    qDebug() << "#Changed Brightness";
 }
