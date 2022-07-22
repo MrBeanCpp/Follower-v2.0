@@ -220,7 +220,7 @@ void CodeEditor::returnPress()
                 showLabel(echoText + "\n-Clipboard-"); //
             } else if (state == Executor::TRANSLATE) {
                 static auto isEn = [](const QString& text) -> bool {
-                    static QRegExp reg("[A-Za-z0-9 ,.]+");
+                    static QRegExp reg("[ -~]+"); //ASCII中可打印字符' '-'~' \x20 - \x7e
                     return reg.exactMatch(text);
                 };
 
