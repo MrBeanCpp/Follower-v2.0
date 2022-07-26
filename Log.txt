@@ -590,3 +590,24 @@
 
 7-22：
     翻译时，EN判断改为ASCII可打印字符[ -~]
+
+7-25：
+    Tip：移植含.ui文件时提示缺少ui_XXX.h，直接重新构建，即可自动生成
+
+    BUG：当该进程其他窗口show时，teleport无法夺取焦点from其他进程窗口，但可以置顶（仅仅因为从MOVE->STILL导致代码不再检测），
+    移开鼠标后，立刻检测为非foregroundWindow，导致SetAlwaysTop(false)，原因不明
+
+    BUG2(已解决)：再本进程其他窗口上teleport，再点击该窗口，焦点会立刻被Follower夺取，原因在于setAlwaysTop(false)的SetWindowPos默认激活窗口（即使是BOTTOM）
+    所以要设置SWP_NOACTIVATE，但奇怪的是，只有本进程其他窗口会被抢占焦点
+
+7-26：
+    #关于高DPI缩放：
+        1.逻辑DPI只与分辨率有关，与屏幕实际大小无关，物理DPI反之，考虑到大屏低分，故采用逻辑DPI
+        2.但Windows缩放会影响逻辑DPI，一般高分屏同时会加上Windows缩放，导致逻辑DPI翻倍再翻倍，如果要杜绝Windows缩放的影响，建议采用分辨率/1080获得分辨率比率
+        但是pt还是会被Windows缩放影响... 或者均使用px*DPIratio
+        ?@等一下：有没有可能分辨率不影响Windows 逻辑DPI 只有Windows缩放影响？
+        已经显示的窗口会被等比例放大（px pt），但是再次调用resize()等方法后会重置，所以推荐自行计算DPI放大倍数*px
+        但某些窗口（如 LightMusicPlayer & CodeCounter）不会受影响，可能是背景模糊函数的影响
+        3.Qt默认字号是9pt，但是如果不在设计师界面修改或显式设置，则字号不会自动缩放（类似于px），即.ui文件中不会写出pointsize
+
+    新增：自定义teleport键盘快捷键（托盘）

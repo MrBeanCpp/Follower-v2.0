@@ -30,6 +30,8 @@ public:
     static void setAutoRun(const QString& AppName, bool isAuto);
     static bool isAutoRun(const QString& AppName);
     static void adjustBrightness(bool isUp, int delta = 10);
+    static WORD registerHotKey(HWND hwnd, UINT modifiers, UINT key, QString str, ATOM* atom);
+    static bool unregisterHotKey(ATOM atom, WORD hotKeyId, HWND hwnd);
 };
 
 #endif // WIN_H

@@ -36,6 +36,7 @@ SOURCES += \
     main.cpp \
     path.cpp \
     request.cpp \
+    shortcutdia.cpp \
     systemapi.cpp \
     timeclipboard.cpp \
     updateform.cpp \
@@ -58,12 +59,14 @@ HEADERS += \
     keystate.h \
     path.h \
     request.h \
+    shortcutdia.h \
     systemapi.h \
     timeclipboard.h \
     updateform.h \
     widget.h
 
 FORMS += \
+    shortcutdia.ui \
     tablebase.ui \
     updateform.ui \
     widget.ui

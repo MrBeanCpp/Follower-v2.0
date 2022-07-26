@@ -46,7 +46,7 @@ void SystemAPI::Init()
 {
     QDir().mkdir(Path::dirPath()); //Core-Info
     scaleRatio = qApp->primaryScreen()->logicalDotsPerInch() / 96; //high DPI scale
-    qDebug() << scaleRatio;
+    qDebug() << scaleRatio << qApp->primaryScreen()->physicalDotsPerInch() << qApp->primaryScreen()->size();
 }
 
 void SystemAPI::Init_SystemTray()

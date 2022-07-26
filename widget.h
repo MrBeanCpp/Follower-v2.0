@@ -57,8 +57,9 @@ private:
     bool hasPower;
 
     bool teleportKeyDown = false;
-    int HotKeyId;
+    ATOM HotKeyId;
     ATOM Atom;
+    QString atomStr = "Follower_MrBeanC_Teleport";
 
     const QString AppName = "Follower v2.0";
 
@@ -89,7 +90,7 @@ private:
     void wrtieIni(void);
     void readIni(void);
     void Init_SystemTray(void);
-    void registerHotKey(void);
+    //WORD registerHotKey(UINT modifiers, UINT key, QString str, ATOM* Atom);
     void setAlwaysTop(bool bTop = true);
 
     // QWidget interface

@@ -202,3 +202,21 @@ void Win::adjustBrightness(bool isUp, int delta)
     process.waitForFinished();
     qDebug() << "#Changed Brightness";
 }
+
+WORD Win::registerHotKey(HWND hwnd, UINT modifiers, UINT key, QString str, ATOM* atom)
+{
+    *atom = GlobalAddAtomA(str.toStdString().c_str());
+    ATOM HotKeyId = (*atom - 0xC000) + 1; //防止return 0
+    bool bHotKey = RegisterHotKey(hwnd, HotKeyId, modifiers, key); //只会响应一个线程的热键，因为响应后，该消息被从队列中移除，无法发送给其他窗口
+    qDebug() << "RegisterHotKey: " << *atom << HotKeyId << bHotKey;
+    return bHotKey ? HotKeyId : 0;
+}
+
+bool Win::unregisterHotKey(ATOM atom, WORD hotKeyId, HWND hwnd)
+{
+    bool del = GlobalDeleteAtom(atom); //=0
+    bool unReg = UnregisterHotKey(hwnd, hotKeyId); //!=0
+    bool ret = !del && unReg;
+    qDebug() << "UnregisterHotKey:" << ret;
+    return ret;
+}

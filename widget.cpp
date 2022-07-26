@@ -22,6 +22,7 @@
 #include <QClipboard>
 #include "WinUtility.h"
 #include "updateform.h"
+#include "shortcutdia.h"
 #define GetKey(X) (GetAsyncKeyState(X) & 0x8000)
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -55,7 +56,6 @@ Widget::Widget(QWidget *parent)
     Init_SystemTray();
     //setTeleportMode(AUTO); //自动判断
     readIni(); //读取配置文件
-    registerHotKey(); //注册全局热键
     connect(&lineEdit->executor, &Executor::changeTeleportMode, [=](int mode) {
         setTeleportMode(TeleportMode(mode)); //static_cast
     });
@@ -369,6 +369,10 @@ void Widget::readIni() //文件不存在时，读取文件不会创建，写文�
         int mode = var.toInt();
         teleportMode = TeleportMode(mode); //不能用setTeleportMode()，因为会写文件
     }
+
+    UINT modifiers = IniSet.value("Shortcut/teleport_modifiers", MOD_CONTROL | MOD_SHIFT).toUInt();
+    UINT key = IniSet.value("Shortcut/teleport_key", 'E').toUInt();
+    HotKeyId = Win::registerHotKey(Hwnd, modifiers, key, atomStr, &Atom); //注册全局热键
 }
 
 void Widget::Init_SystemTray()
@@ -379,10 +383,12 @@ void Widget::Init_SystemTray()
 
     QAction* act_autoStart = new QAction("AutoStart", menu);
     QAction* act_update = new QAction("Update", menu);
+    QAction* act_shortcut = new QAction("ShortCut", menu);
     QAction* act_about = new QAction("About", menu);
     QAction* act_quit = new QAction("Peace Out", menu);
     menu->addAction(act_autoStart);
     menu->addAction(act_update);
+    menu->addAction(act_shortcut);
     menu->addAction(act_about);
     menu->addAction(act_quit);
 
@@ -396,6 +402,16 @@ void Widget::Init_SystemTray()
         static UpdateForm* updateForm = new UpdateForm(nullptr); //不能把this作为parent 否则最小化会同步 （这不算内存泄露吧 周期同步
         updateForm->show();
     });
+    connect(act_shortcut, &QAction::triggered, [=]() {
+        ShortcutDia* shortcutDia = new ShortcutDia(nullptr);
+        shortcutDia->setAttribute(Qt::WA_DeleteOnClose, true);
+        connect(shortcutDia, &ShortcutDia::updateShortcut, [=](UINT modifiers, UINT key, QString str) {
+            if (Atom) Win::unregisterHotKey(Atom, HotKeyId, Hwnd);
+            HotKeyId = Win::registerHotKey(Hwnd, modifiers, key, atomStr, &Atom); //注册全局热键
+            sys->sysTray->showMessage("ShortCut Tip", QString("ShortCut Teleport Updated;\n%1").arg(str));
+        });
+        shortcutDia->show();
+    });
     connect(act_about, &QAction::triggered, [=]() {
         QMessageBox::about(this, "About Follower v2.0", "[Made by MrBeanC]\n"
                                                         "My Vegetable has exploded");
@@ -407,19 +423,12 @@ void Widget::Init_SystemTray()
     sys->sysTray->show();
 }
 
-void Widget::registerHotKey()
-{
-    Atom = GlobalAddAtomA("Follower_MrBeanC_Teleport");
-    HotKeyId = Atom - 0xC000;
-    //Ctrl+Shift+E 瞬移全局快捷键
-    bool bHotKey = RegisterHotKey(Hwnd, HotKeyId, MOD_CONTROL | MOD_SHIFT, 'E'); //只会响应一个线程的热键，因为响应后，该消息被从队列中移除，无法发送给其他窗口
-    qDebug() << "RegisterHotKey: " << Atom << HotKeyId << bHotKey;
-}
-
 void Widget::setAlwaysTop(bool bTop)
 {
-    if (Hwnd) //必须要用HWND_BOTTOM HWND_NOTOPMOST 无效（依旧top）：将窗口置于所有非顶层窗口之上（即在所有顶层窗口之后）
-        SetWindowPos(Hwnd, bTop ? HWND_TOPMOST : HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW); //持续置顶
+    if (Hwnd) //必须要用HWND_BOTTOM HWND_NOTOPMOST 无效（依旧top）：将窗口置于所有非顶层窗口之上（即在所有顶层窗口之后）如果窗口已经是非顶层窗口则该标志不起作用。
+        SetWindowPos(Hwnd, bTop ? HWND_TOPMOST : HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW | SWP_NOACTIVATE); //持续置顶
+    //SWP_NOACTIVATE 不激活窗口。如果未设置标志，则窗口被激活, 抢占本进程（其他进程不影响）其他窗口（即使是HWND_BOTTOM）
+    //导致在本进程其他窗口上teleport后，该窗口获得焦点后会被迅速抢占(setAlwaysTop(false))
     qDebug() << "setTop:" << bTop;
 }
 
@@ -518,9 +527,9 @@ bool Widget::nativeEvent(const QByteArray& eventType, void* message, long* resul
         QtWin::taskbarDeleteTab(this);
         return true;
     } else if (msg->message == WM_HOTKEY) {
-        UINT modify = (UINT)LOWORD(msg->lParam);
-        UINT key = (UINT)HIWORD(msg->lParam);
-        if (modify == (MOD_CONTROL | MOD_SHIFT) && key == 'E') //瞬移全局快捷键
+        //        UINT modify = (UINT)LOWORD(msg->lParam);//瞬移全局快捷键
+        //        UINT key = (UINT)HIWORD(msg->lParam);
+        if (msg->wParam == HotKeyId) //直接比较 ID
             if (isState(MOVE) || isState(INPUT)) //STILL不响应
                 teleportKeyDown = true;
         return true;
@@ -531,6 +540,5 @@ bool Widget::nativeEvent(const QByteArray& eventType, void* message, long* resul
 void Widget::closeEvent(QCloseEvent* event)
 {
     Q_UNUSED(event)
-    qDebug() << "GlobalDeleteAtom:" << GlobalDeleteAtom(Atom); //=0
-    qDebug() << "UnregisterHotKey:" << UnregisterHotKey(Hwnd, HotKeyId); //!=0
+    Win::unregisterHotKey(Atom, HotKeyId, Hwnd);
 }
