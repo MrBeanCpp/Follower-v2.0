@@ -6,6 +6,7 @@
 #include <QSettings>
 #include <QTimer>
 #include <systemapi.h>
+#include <QMetaEnum>
 ShortcutDia::ShortcutDia(QWidget* parent)
     : QDialog(parent), ui(new Ui::ShortcutDia)
 {
@@ -25,21 +26,27 @@ bool ShortcutDia::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched != ui->lineEdit) return false;
     if (event->type() == QEvent::KeyPress) {
-        static UINT mods, key;
+        static UINT mods, vkey;
         QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
         Qt::KeyboardModifiers modifiers = keyEvent->modifiers();
+        Qt::Key key = Qt::Key(keyEvent->key());
+        QString keyStr = QMetaEnum::fromType<Qt::Key>().valueToKey(key);
 
         if (modifiers == Qt::NoModifier && keyEvent->key() == Qt::Key_Return) {
-            qDebug() << mods << key;
-            QSettings IniSet(Path::iniFile(), QSettings::IniFormat);
-            IniSet.setValue("Shortcut/teleport_modifiers", mods);
-            IniSet.setValue("Shortcut/teleport_key", key);
-            qDebug() << "writen";
-            emit updateShortcut(mods, key, ui->lineEdit->text());
-            ui->lineEdit->setText("Successful");
-            QTimer::singleShot(1200, [=]() {
-                this->close();
-            });
+            if (vkey) {
+                qDebug() << mods << vkey;
+                QSettings IniSet(Path::iniFile(), QSettings::IniFormat);
+                IniSet.setValue("Shortcut/teleport_modifiers", mods);
+                IniSet.setValue("Shortcut/teleport_key", vkey);
+                qDebug() << "writen";
+                emit updateShortcut(mods, vkey, ui->lineEdit->text());
+                ui->lineEdit->setText("Successful");
+                QTimer::singleShot(1200, [=]() {
+                    this->close();
+                });
+            } else
+                ui->lineEdit->setText("Only Modifiers");
+
             return true;
         } else if (modifiers == Qt::NoModifier && keyEvent->key() == Qt::Key_Escape) {
             close();
@@ -50,8 +57,8 @@ bool ShortcutDia::eventFilter(QObject* watched, QEvent* event)
         bool isAlt = modifiers & Qt::AltModifier;
         bool isShift = modifiers & Qt::ShiftModifier;
         bool isWin = modifiers & Qt::MetaModifier;
-        key = keyEvent->nativeVirtualKey();
-        //qDebug() << modifiers << key;
+        vkey = keyEvent->nativeVirtualKey();
+        qDebug() << modifiers << vkey << key << keyStr;
 
         mods &= 0;
         QString str;
@@ -72,10 +79,12 @@ bool ShortcutDia::eventFilter(QObject* watched, QEvent* event)
             mods |= MOD_SHIFT;
         }
 
-        if (key >= ' ' && key <= '~') {
+        static const QSet<Qt::Key> mods_key = { Qt::Key_Control, Qt::Key_Alt, Qt::Key_Meta, Qt::Key_Shift };
+        if (!mods_key.contains(key)) { //仅modifiers时，返回的key是最后一个modifier
             if (!str.isEmpty()) str += '+';
-            str += char(key);
-        }
+            str += keyStr.mid(4); //del Key_
+        } else
+            vkey = 0;
 
         ui->lineEdit->setText(str);
         return true;

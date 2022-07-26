@@ -32,7 +32,7 @@ private:
     QNetworkAccessManager* manager = nullptr;
     const QString releaseUrl = "https://gitee.com/mrbeanc/follower-v2.0/releases";
 
-    const QString ver = "v2.6.0";
+    const QString ver = "v2.6.1";
 
     // QWidget interface
 protected:
