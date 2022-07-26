@@ -13,6 +13,7 @@ ShortcutDia::ShortcutDia(QWidget* parent)
     ui->setupUi(this);
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     setFixedSize(DPI(size()));
+    ui->lineEdit->setAttribute(Qt::WA_InputMethodEnabled, false); //屏蔽输入法 否则输入法是检测不到KeyPress事件的
     ui->lineEdit->installEventFilter(this);
 }
 
@@ -32,7 +33,7 @@ bool ShortcutDia::eventFilter(QObject* watched, QEvent* event)
         Qt::Key key = Qt::Key(keyEvent->key());
         QString keyStr = QMetaEnum::fromType<Qt::Key>().valueToKey(key);
 
-        if (modifiers == Qt::NoModifier && keyEvent->key() == Qt::Key_Return) {
+        if ((modifiers == Qt::NoModifier && key == Qt::Key_Return) || (modifiers == Qt::KeypadModifier && key == Qt::Key_Enter)) { //这俩VK一样 只检测一个会导致另一个变为快捷键 且无法再进入这个if
             if (vkey) {
                 qDebug() << mods << vkey;
                 QSettings IniSet(Path::iniFile(), QSettings::IniFormat);
@@ -45,10 +46,10 @@ bool ShortcutDia::eventFilter(QObject* watched, QEvent* event)
                     this->close();
                 });
             } else
-                ui->lineEdit->setText("Only Modifiers");
+                ui->lineEdit->setText("Only Modifiers or Not Valid");
 
             return true;
-        } else if (modifiers == Qt::NoModifier && keyEvent->key() == Qt::Key_Escape) {
+        } else if (modifiers == Qt::NoModifier && key == Qt::Key_Escape) {
             close();
             return true;
         }
