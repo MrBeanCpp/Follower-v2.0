@@ -7,6 +7,7 @@
 #include <QWhatsThis>
 #include <QInputDialog>
 #include <QKeyEvent>
+#include <QFileInfo>
 CmdEditor::CmdEditor(const QString& Path, QWidget* parent)
     : TableEditor(Path, parent)
 {
@@ -84,4 +85,18 @@ void CmdEditor::closeEvent(QCloseEvent* event)
 {
     emit aboutToClose(); //如果用的多的话 可以移至父类
     TableEditor::closeEvent(event); //调用父类函数
+}
+
+void CmdEditor::dropEvent(QDropEvent *event)
+{
+    Q_UNUSED(event)
+    if (dropItem) //对nullptr使用会卡顿
+        dropItem->setText(dropPath);
+    else{
+        newLine();
+        int row = table->currentRow();
+        QString fileName = QFileInfo(dropPath).baseName();
+        table->item(row, 2)->setText(dropPath);
+        table->item(row, 0)->setText(fileName);
+    }
 }

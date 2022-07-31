@@ -32,6 +32,10 @@ protected:
     // QWidget interface
 protected:
     void closeEvent(QCloseEvent* event) override;
+
+    // QWidget interface
+protected:
+    void dropEvent(QDropEvent *event) override;
 };
 
 #endif // CMDEDITOR_H

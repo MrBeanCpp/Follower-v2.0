@@ -56,11 +56,11 @@ Widget::Widget(QWidget *parent)
     Init_SystemTray();
     //setTeleportMode(AUTO); //自动判断
     readIni(); //读取配置文件
-    connect(&lineEdit->executor, &Executor::changeTeleportMode, [=](int mode) {
+    connect(&lineEdit->executor, &Executor::changeTeleportMode, this, [=](int mode) {
         setTeleportMode(TeleportMode(mode)); //static_cast
     });
 
-    connect(lineEdit, &CodeEditor::reportResize, [=](int w, int h) {
+    connect(lineEdit, &CodeEditor::reportResize, this, [=](int w, int h) {
         int W = w >= 0 ? w + 2 * Margin : width();
         int H = h >= 0 ? h + 2 * Margin : height();
         resize(W, H);
@@ -73,7 +73,7 @@ Widget::Widget(QWidget *parent)
     timer_move->start(10);
 
     QTimer* timer_beat = new QTimer(this); //心跳，防止假死
-    connect(timer_beat, &QTimer::timeout, [=]() {
+    connect(timer_beat, &QTimer::timeout, this, [=]() {
         if (!isState(INPUT)) //INPUT状态update会导致拖拽卡顿
             update(); //更新时间显示
 
@@ -86,28 +86,30 @@ Widget::Widget(QWidget *parent)
     });
     timer_beat->start(1000);
 
-    connect(&lineEdit->executor, &Executor::askHide, [=]() {
+    connect(&lineEdit->executor, &Executor::askHide, this, [=]() {
         hide();
         timer_move->stop();
     });
-    connect(&lineEdit->executor, &Executor::askShow, [=]() {
+    connect(&lineEdit->executor, &Executor::askShow, this, [=]() {
         show();
         QTimer::singleShot(100, [=]() { timer_move->start(); }); //防止Esc来不及抬起，导致INPUT->STILL
         sys->inputM->setEnMode(Hwnd);
         SwitchToThisWindow(Hwnd, true);
     });
-    connect(lineEdit, &CodeEditor::returnWithoutEcho, [=]() { setState(STILL, 2); }); //命令执行后自动回复
+    connect(lineEdit, &CodeEditor::returnWithoutEcho, this, [=]() { setState(STILL, 2); }); //命令执行后自动回复
 
-    connect(sys->sysTray, &QSystemTrayIcon::activated, [=](QSystemTrayIcon::ActivationReason reason) {
+    connect(sys->sysTray, &QSystemTrayIcon::activated, this, [=](QSystemTrayIcon::ActivationReason reason) {
         if (reason == QSystemTrayIcon::Trigger) {
             winPos = Screen.center();
             //show();
+            qDebug() << timer_move->isActive() << timer_move->remainingTime();
+            qDebug() << timer_beat->isActive() << timer_beat->remainingTime();
             setWindowState(Qt::WindowActive);
             SwitchToThisWindow(Hwnd, true);
         }
     });
 
-    connect(sys->gTimer, &GapTimer::timeout, [=]() {
+    connect(sys->gTimer, &GapTimer::timeout, this, [=]() {
         if (sys->gTimer->inGap(QDateTime(QDate::currentDate(), QTime(0, 0, 0)))) //只用Time无法比较区分两天(过零点)
             sys->sysTray->showMessage("Little Tip", "It's Time to Sleep");
     });
@@ -506,7 +508,7 @@ void Widget::mouseReleaseEvent(QMouseEvent* event)
 void Widget::wheelEvent(QWheelEvent* event)
 {
     if (isState(STILL)) {
-        bool rollUp = event->delta() > 0;
+        bool rollUp = event->angleDelta().y() > 0;
         if (event->modifiers() & Qt::ControlModifier) {
             Win::adjustBrightness(rollUp); //阻塞
             sys->sysTray->showMessage("Brightness Changed", QString("Brightness %1").arg(rollUp ? "UP" : "DOWN"), QSystemTrayIcon::Information, 500);
@@ -529,6 +531,7 @@ bool Widget::nativeEvent(const QByteArray& eventType, void* message, long* resul
     } else if (msg->message == WM_HOTKEY) {
         //        UINT modify = (UINT)LOWORD(msg->lParam);//瞬移全局快捷键
         //        UINT key = (UINT)HIWORD(msg->lParam);
+        qDebug() << "#hotkey";
         if (msg->wParam == HotKeyId) //直接比较 ID
             if (isState(MOVE) || isState(INPUT)) //STILL不响应
                 teleportKeyDown = true;

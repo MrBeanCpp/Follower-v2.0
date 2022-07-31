@@ -614,3 +614,23 @@
 
     更新了快捷键回显（枚举转字符串） &  加入仅快捷键（无key）判断
     屏蔽了输入法 & 归并小键盘Enter（感谢Darli报告的bug）
+
+## new PC：Qt 5.14 -> 5.15 win10->win11
+7-30：
+    醉了：升级之后，Qt组件源码可能发生了变化 出现了几个bug
+    setSizeHint()的size 填写-1会被认定为整体无效，原：QSize(-1, 25)//代表宽度默认 高度25，现整体默认；需改为QSize(0, 25)//cmdlistwidget
+
+    #BUG:Follower出现了远古问题：长时间不使用导致休眠后，再次唤醒PC，Follower定时器无响应，isActive == true remainingTime == 0，表现为无法Move，过一会儿自动恢复
+        （有可能是诺顿的问题 关了之后貌似没事？）
+
+7-31：
+    cmdEditor：拖拽文件时，若不在现有line上 则新建line并填写path & filename
+
+    #Qt大部分容器是写时复制，这是为了保证性能，但是在C++11的范围for中，非常量容器会导致detach（copy）
+        很多人喜欢用C++ 11的range-based for，但由于内部迭代器的实现，如果QVector这样的容器本身非常量，会导致可能的detach，
+        这和循环变量本身的修饰符无关。因此如果只需要在循环中读取容器，那么应该写成：
+            for(auto &i: qAsConst(T))
+            //https://zhuanlan.zhihu.com/p/347269163
+
+    #QObject::connect使用带有 lambda的 3-arg 时发出警告。建议使用 4-arg 重载，它采用上下文对象，以便在删除上下文对象时不执行 lambda
+        也就是在lambda之前加一个this，明确接收者

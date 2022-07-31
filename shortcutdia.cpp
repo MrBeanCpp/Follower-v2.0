@@ -20,7 +20,7 @@ ShortcutDia::ShortcutDia(QWidget* parent)
 ShortcutDia::~ShortcutDia()
 {
     delete ui;
-    this->disconnect(SIGNAL(updateShortcut(UINT, UINT, QString)));
+    this->disconnect(SIGNAL(updateShortcut(UINT, UINT, QString)));//maybe unnecessary
 }
 
 bool ShortcutDia::eventFilter(QObject* watched, QEvent* event)
@@ -42,7 +42,7 @@ bool ShortcutDia::eventFilter(QObject* watched, QEvent* event)
                 qDebug() << "writen";
                 emit updateShortcut(mods, vkey, ui->lineEdit->text());
                 ui->lineEdit->setText("Successful");
-                QTimer::singleShot(1200, [=]() {
+                QTimer::singleShot(1200, this, [=]() {
                     this->close();
                 });
             } else
@@ -83,7 +83,7 @@ bool ShortcutDia::eventFilter(QObject* watched, QEvent* event)
         static const QSet<Qt::Key> mods_key = { Qt::Key_Control, Qt::Key_Alt, Qt::Key_Meta, Qt::Key_Shift };
         if (!mods_key.contains(key)) { //仅modifiers时，返回的key是最后一个modifier
             if (!str.isEmpty()) str += '+';
-            str += keyStr.mid(4); //del Key_
+            str += keyStr.midRef(4); //del Key_
         } else
             vkey = 0;
 

@@ -71,9 +71,9 @@ bool Executor::isMatch(const QString& dst, const QString& str, Qt::CaseSensitivi
     if (symbol(dst) != symbol(str)) return false; //不同级别命令不比较
     //if ((str.at(0) == '#' && dst.at(0) != '#') || (str.at(0) != '#' && dst.at(0) == '#')) return false; //加入匹配size 符号类别二次匹配 getsymbol!!!!!!!!!!!!!!!!!!!
     bool extra = str.endsWith(' '); //(如："qt "->"qt"：false 以保证"qt code"快捷匹配)
-    const QRegExp reg("\\W+"); //匹配至少一个[非字母数字]
-    QStringList dstList = dst.simplified().split(reg, QString::SkipEmptyParts);
-    QStringList strList = str.simplified().split(reg, QString::SkipEmptyParts);
+    static const QRegExp reg("\\W+"); //匹配至少一个[非字母数字]
+    QStringList dstList = dst.simplified().split(reg, Qt::SkipEmptyParts);
+    QStringList strList = str.simplified().split(reg, Qt::SkipEmptyParts);
 
     if (symbol(dst) == Inner_Cmd) dstList.push_front(InnerMark); //复原上一步清除的'#'
     if (symbol(str) == Inner_Cmd) strList.push_front(InnerMark);
@@ -81,9 +81,9 @@ bool Executor::isMatch(const QString& dst, const QString& str, Qt::CaseSensitivi
     if (strList.empty()) return false;
     if (dstList.size() < strList.size() + extra) return false; //' '顶一个size
 
-    for (const QString& _str : strList) { //存在多次匹配同一个单词问题(不过问题不大)
+    for (const QString& _str : qAsConst(strList)) { //存在多次匹配同一个单词问题(不过问题不大)
         bool flag = false;
-        for (const QString& _dst : dstList) {
+        for (const QString& _dst : qAsConst(dstList)) {
             if (_dst.indexOf(_str, 0, cs) == 0) {
                 flag = true;
                 break;
@@ -200,13 +200,13 @@ QList<QPair<QString, QString>> Executor::matchString(const QString& str, State* 
         return list;
     }
 
-    for (const Command& cmd : cmdList)
+    for (const Command& cmd : qAsConst(cmdList))
         if (isMatch(cmd.code, str, cs)) //忽略大小写//cmd.code.indexOf(str, 0, Qt::CaseInsensitive) == 0)
             list << qMakePair(cmd.code + cmd.extra, cmd.filename);
     //无需去重 可能出现同名不同path等 让用户选择
 
     QSet<QString> codeSet;
-    for (const InnerCommand& cmd : innerCmdList)
+    for (const InnerCommand& cmd : qAsConst(innerCmdList))
         if (isMatch(cmd.code, str, cs)) { //忽略大小写
             QString str = cmd.showCode.isEmpty() ? cmd.code : cmd.showCode;
             if (!codeSet.contains(str)) { //去重

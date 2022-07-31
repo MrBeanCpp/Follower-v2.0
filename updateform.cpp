@@ -74,7 +74,7 @@ void UpdateForm::download(const QUrl& url, const QString& path, std::function<vo
         ui->progressBar->setValue(1.0 * received / total * 100);
     });
 
-    connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), [=](QNetworkReply::NetworkError code) {
+    connect(reply, &QNetworkReply::errorOccurred, [=](QNetworkReply::NetworkError code) {
         qCritical() << code;
     });
 }
@@ -170,8 +170,10 @@ void UpdateForm::showEvent(QShowEvent* event)
 {
     Q_UNUSED(event)
     getDownloadUrl(releaseUrl, [=](QMap<QString, QString> res) {
-        if (res.empty())
+        if (res.empty()){
             ui->label->setText("ERROR:empty result");
+            ui->btn_auto->setEnabled(false);
+        }
         else {
             ui->label->setText(QString("当前版本：%1\n最新版本：%2\n\n%3").arg(ver).arg(res["version"]).arg(res["desc"]));
             ui->btn_auto->setEnabled(ver != res["version"]);

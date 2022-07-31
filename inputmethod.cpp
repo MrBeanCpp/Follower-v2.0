@@ -24,7 +24,7 @@ void InputMethod::checkAndSetEn()
 
 bool InputMethod::isInList(const QString& title)
 {
-    for (auto str : list)
+    for (auto str : qAsConst(list))
         if (title.contains(str, Qt::CaseInsensitive))
             return true;
     return false;
@@ -32,7 +32,7 @@ bool InputMethod::isInList(const QString& title)
 
 bool InputMethod::isWindowTitleInList(const QString& title)
 {
-    for (const QString& str : list)
+    for (const QString& str : qAsConst(list))
         if (!str.endsWith(".exe") && title.contains(str, Qt::CaseInsensitive)) {
             //qDebug() << "匹配：" << str << " in " << title;
             return true;
@@ -42,7 +42,7 @@ bool InputMethod::isWindowTitleInList(const QString& title)
 
 bool InputMethod::isProcessNameInList(const QString& name)
 {
-    for (const QString& str : list)
+    for (const QString& str : qAsConst(list))
         if (name == str) {
             //qDebug() << "匹配：" << str << " == " << name;
             return true;

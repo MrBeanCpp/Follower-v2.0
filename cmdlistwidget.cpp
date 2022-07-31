@@ -30,7 +30,7 @@ void CMDListWidget::addIconItems(const IconStrList& list) //貌似加载不同�
     for (auto& p : list) {
         static QIcon nullIcon(":/images/web.png"); //默认图标
         QListWidgetItem* item = new QListWidgetItem(p.second, this);
-        item->setSizeHint(QSize(-1, Item_H));
+        item->setSizeHint(QSize(0, Item_H));
         //item->setIcon(p.first); //QIcon()==无图标
         if (!p.first.isNull())
             item->setIcon(nullIcon);
@@ -39,7 +39,7 @@ void CMDListWidget::addIconItems(const IconStrList& list) //貌似加载不同�
     setCurrentRow(0);
     adjustSizeEx();
 
-    QTimer::singleShot(0, [=]() { //进入事件队列 在首次渲染list完成后再add Icon
+    QTimer::singleShot(0, this, [=]() { //进入事件队列 在首次渲染list完成后再add Icon
         //QtConcurrent::run([=]() {
         qApp->processEvents();
         QTime t = tModify; //static 无需捕获
@@ -86,7 +86,7 @@ void CMDListWidget::keyPressEvent(QKeyEvent* event)
 {
     switch (event->key()) {
     case Qt::Key_Return:
-    case Qt::Key_End:
+    case Qt::Key_Enter:
         emit itemActivedEx(currentItem());
         break;
     default:

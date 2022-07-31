@@ -30,7 +30,7 @@ protected:
     TableList oldList; //getContentList()更新后读取即可启动close检查
     TableList newList; //closeEvent自动读取
 
-private:
+protected:
     QMenu* deleteMenu; //右键点击
     QAction* deleteAction; //删除事件（如需要其它事件，可新定义）
 

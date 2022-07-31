@@ -4,7 +4,7 @@ QMap<int, KeyState::Record> KeyState::lastState;
 QSet<QPair<int, KeyState::State>> KeyState::lockList;
 KeyState::State KeyState::state(int vKey, int releaseLimit)
 {
-    for (const auto& p : lockList) //在clearLock之前只能检测Key一次，防止多次改变状态
+    for (const auto& p : qAsConst(lockList)) //在clearLock之前只能检测Key一次，防止多次改变状态
         if (p.first == vKey)
             return checkReleaseLimit(vKey, p.second, releaseLimit);
 

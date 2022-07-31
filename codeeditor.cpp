@@ -31,12 +31,12 @@ CodeEditor::CodeEditor(int width, int height, QWidget* parent)
     comp->setCompletionMode(QCompleter::InlineCompletion);
 
     //用于在触发补全时(setText 不触发textEdit) 调整size
-    connect(comp, QOverload<const QString&>::of(&QCompleter::highlighted), [=](const QString& text) {
+    connect(comp, QOverload<const QString&>::of(&QCompleter::highlighted), this, [=](const QString& text) {
         adjustWholeSize(text); //放在textChanged也行 但为了提升性能 不做重复adjust (text()比较滞后)
     });
 
     auto cmdList = executor.getCMDList();
-    for (const auto& cmd : cmdList)
+    for (const auto& cmd : qAsConst(cmdList))
         iconPro.addCache(cmd.filename); //初始化缓存
 }
 
@@ -166,7 +166,7 @@ void CodeEditor::textEdit(const QString& text) //不包括setText clear等代码
             showLabel(executor.hasText() ? executor.text() : "No match code");
         } else {
             IconStrList itemList;
-            for (const auto& p : list) {
+            for (const auto& p : qAsConst(list)) {
                 const QString& path = p.second;
                 itemList << qMakePair(iconPro.icon(path), p.first);
             }
