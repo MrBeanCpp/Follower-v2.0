@@ -17,10 +17,21 @@ UpdateForm::UpdateForm(QWidget* parent)
     resize(DPI(size()));
     manager = new QNetworkAccessManager(this);
 
-    connect(ui->btn_auto, &QPushButton::clicked, [=]() {
+    taskBarBtn = new QWinTaskbarButton(this);
+    QTimer::singleShot(0, this, [=](){
+        taskBarBtn->setWindow(windowHandle()); //必须在窗口构造之后
+        taskBarProgress = taskBarBtn->progress();
+        taskBarProgress->setRange(0, 100);
+    });
+    connect(ui->progressBar, &QProgressBar::valueChanged, this, [=](int value){
+        taskBarProgress->setValue(value);
+    });
+
+    connect(ui->btn_auto, &QPushButton::clicked, this, [=]() {
+        taskBarProgress->show();
         updateLatestGiteeRelease(releaseUrl, "download.zip");
     });
-    connect(ui->btn_manual, &QPushButton::clicked, [=]() {
+    connect(ui->btn_manual, &QPushButton::clicked, this, [=]() {
         QDesktopServices::openUrl(QUrl(releaseUrl));
     });
 }
@@ -40,17 +51,16 @@ void UpdateForm::download(const QUrl& url, const QString& path, std::function<vo
     if (url.isEmpty()) return;
 
     QNetworkRequest request(url);
+    request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true); //自动重定向
     QNetworkReply* reply = manager->get(request);
     static bool isSuccess;
     isSuccess = false;
 
     QFile::remove(path);
     ui->progressBar->setValue(0);
+    taskBarProgress->setValue(0);
 
-    connect(reply, &QNetworkReply::readyRead, [=]() {
-        QUrl reTarget = getRedirectTarget(reply);
-        if (reTarget.isValid()) return;
-
+    connect(reply, &QNetworkReply::readyRead, this, [=]() {
         QFile file(path);
         if (file.open(QIODevice::WriteOnly | QIODevice::Append))
             file.write(reply->readAll());
@@ -58,24 +68,21 @@ void UpdateForm::download(const QUrl& url, const QString& path, std::function<vo
 
     connect(reply, &QNetworkReply::finished, [=]() {
         qDebug() << "download finished";
-
-        QUrl reTarget = getRedirectTarget(reply); //重定向
         reply->deleteLater();
-        if (reTarget.isValid()) {
-            qDebug() << reTarget;
-            download(reTarget, path, todo);
-        } else
-            todo(isSuccess);
+        todo(isSuccess);
     });
 
-    connect(reply, &QNetworkReply::downloadProgress, [=](qint64 received, qint64 total) {
+    connect(reply, &QNetworkReply::downloadProgress, this, [=](qint64 received, qint64 total) {
         isSuccess = (received == total);
-        qDebug() << 1.0 * received / total * 100 << "%";
-        ui->progressBar->setValue(1.0 * received / total * 100);
+        qreal percent = 1.0 * received / total * 100;
+        qDebug() << percent << "%";
+        ui->progressBar->setValue(percent);
+        ui->progressBar->setFormat(QString("%1%").arg(QString::number(percent, 'f', 2)));
     });
 
-    connect(reply, &QNetworkReply::errorOccurred, [=](QNetworkReply::NetworkError code) {
+    connect(reply, &QNetworkReply::errorOccurred, this, [=](QNetworkReply::NetworkError code) {
         qCritical() << code;
+        setWindowTitle(QString::number(code));
     });
 }
 
@@ -84,7 +91,7 @@ void UpdateForm::getDownloadUrl(const QString& htmlUrl, std::function<void(QMap<
     QNetworkRequest request { QUrl(htmlUrl) }; //{}否则被误认为函数声明
     QNetworkReply* reply = manager->get(request);
 
-    connect(reply, &QNetworkReply::finished, [=]() {
+    connect(reply, &QNetworkReply::finished, this, [=]() {
         qDebug() << "html finished";
         reply->deleteLater();
 
@@ -175,9 +182,12 @@ void UpdateForm::showEvent(QShowEvent* event)
             ui->btn_auto->setEnabled(false);
         }
         else {
-            ui->label->setText(QString("当前版本：%1\n最新版本：%2\n\n%3").arg(ver).arg(res["version"]).arg(res["desc"]));
+            qDebug() << res["url"];
+            ui->label->setText(QString("当前版本：%1\n最新版本：%2\n\n%3").arg(ver, res["version"], res["desc"]));
             ui->btn_auto->setEnabled(ver != res["version"]);
         }
-        ui->label->adjustSize();
+        //ui->label->adjustSize();
+        ui->verticalLayout->update(); //尝试防止刷新文本后布局紊乱
+        resize(size());
     });
 }

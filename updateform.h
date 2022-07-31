@@ -9,6 +9,8 @@
 #include <QtDebug>
 #include <functional>
 #include "systemapi.h"
+#include <QWinTaskbarButton>
+#include <QWinTaskbarProgress>
 namespace Ui {
 class UpdateForm;
 }
@@ -32,7 +34,10 @@ private:
     QNetworkAccessManager* manager = nullptr;
     const QString releaseUrl = "https://gitee.com/mrbeanc/follower-v2.0/releases";
 
-    const QString ver = "v2.7.0";
+    QWinTaskbarButton* taskBarBtn = nullptr;
+    QWinTaskbarProgress* taskBarProgress = nullptr;
+
+    const QString ver = "v2.7.1";
 
     // QWidget interface
 protected:
