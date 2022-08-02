@@ -4,6 +4,7 @@
 #include <QString>
 #include <windows.h>
 #include <QRect>
+#include <QAudioDeviceInfo>
 class Win //Windows API
 {
 public:
@@ -32,6 +33,9 @@ public:
     static void adjustBrightness(bool isUp, int delta = 10);
     static WORD registerHotKey(HWND hwnd, UINT modifiers, UINT key, QString str, ATOM* atom);
     static bool unregisterHotKey(ATOM atom, WORD hotKeyId, HWND hwnd);
+    static QStringList validAudioOutputDevices(void);
+    static QString activeAudioOutputDevice(void);
+    static void setActiveAudioOutputDevice(const QString& name);
 };
 
 #endif // WIN_H

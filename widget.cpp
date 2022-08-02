@@ -20,13 +20,11 @@
 #include <cmath>
 #include <QMimeData>
 #include <QClipboard>
-#include "WinUtility.h"
 #include "updateform.h"
 #include "shortcutdia.h"
 #define GetKey(X) (GetAsyncKeyState(X) & 0x8000)
-Widget::Widget(QWidget *parent)
-    : QWidget(parent)
-    , ui(new Ui::Widget)
+Widget::Widget(QWidget* parent)
+    : QWidget(parent), ui(new Ui::Widget)
 {
     ui->setupUi(this);
     setWindowFlags(Qt::FramelessWindowHint);
@@ -92,7 +90,7 @@ Widget::Widget(QWidget *parent)
     });
     connect(&lineEdit->executor, &Executor::askShow, this, [=]() {
         show();
-        QTimer::singleShot(100, [=]() { timer_move->start(); }); //防止Esc来不及抬起，导致INPUT->STILL
+        QTimer::singleShot(100, this, [=]() { timer_move->start(); }); //防止Esc来不及抬起，导致INPUT->STILL
         sys->inputM->setEnMode(Hwnd);
         SwitchToThisWindow(Hwnd, true);
     });
@@ -234,6 +232,25 @@ void Widget::updateWindow()
             setWindowState(Qt::WindowMinimized);
             setState(MOVE);
             break;
+        } else if (KeyState::isRelease(VK_TAB)) { //TAB切换音频输出设备
+            switchAudioOutputDevice(QString(), true);
+            /*巨复杂写法
+             * 手动记录records  需要List而非单变量的原因是切换Menu->Action时无法获取上一个Action（所以需要>三个变量）
+             * 其实可以用过Win::activeAudioOutputDevice获取
+            QString curDev = Win::activeAudioOutputDevice();
+            qDebug() << "TAB" << curDev;
+            QStringList devs {Win::validAudioOutputDevices()};
+            int N = audioRecords.size();
+            if (devs.size() > 1) {
+                QString lastDev = N ? audioRecords.at(qMax(0, N - 1)) : curDev; //处理records为空的情况
+                if (devs.contains(lastDev)) { //ensure exist
+                    QString toDev = (lastDev == curDev ? devs[1] : lastDev); //避免和当前相同（第一次的情况）
+                    Win::setActiveAudioOutputDevice(toDev);
+                    audioRecords << toDev;
+                    while (audioRecords.size() > 2) audioRecords.pop_front(); //清理过多records
+                    qDebug() << audioRecords;
+                }
+            }*/
         }
         if (isCursorInWindow()) break;
         isMove = moveWindow();
@@ -254,7 +271,7 @@ void Widget::updateWindow()
 
 QPoint Widget::centerToLT(const QPoint& pos)
 {
-    return { pos.x() - width() / 2, pos.y() - height() / 2 };
+    return {pos.x() - width() / 2, pos.y() - height() / 2};
 }
 
 bool Widget::isCursorInWindow()
@@ -386,35 +403,55 @@ void Widget::Init_SystemTray()
     QAction* act_autoStart = new QAction("AutoStart", menu);
     QAction* act_update = new QAction("Update", menu);
     QAction* act_shortcut = new QAction("ShortCut", menu);
+    QMenu* menu_audio = new QMenu("Switch AudioDev", menu);
     QAction* act_about = new QAction("About", menu);
     QAction* act_quit = new QAction("Peace Out", menu);
+
+    QActionGroup* audioGroup = new QActionGroup(menu_audio);
+    connect(menu_audio, &QMenu::triggered, this, [=](QAction* action) { //切换设备
+        switchAudioOutputDevice(action->text());
+    });
+    connect(menu_audio, &QMenu::aboutToShow, this, [=]() { //更新音频设备列表
+        menu_audio->clear();
+        //未清空actionGroup でも大丈夫かなあ
+        QStringList audioDevs {Win::validAudioOutputDevices()};
+        for (const auto& dev : qAsConst(audioDevs)) {
+            QAction* act = menu_audio->addAction(dev);
+            act->setActionGroup(audioGroup);
+            act->setCheckable(true);
+            if (dev == audioDevs.at(0))
+                act->setChecked(true);
+        }
+    });
+
     menu->addAction(act_autoStart);
     menu->addAction(act_update);
     menu->addAction(act_shortcut);
+    menu->addMenu(menu_audio);
     menu->addAction(act_about);
     menu->addAction(act_quit);
 
     act_autoStart->setCheckable(true);
     act_autoStart->setChecked(Win::isAutoRun(AppName));
-    connect(act_autoStart, &QAction::toggled, [=](bool checked) {
+    connect(act_autoStart, &QAction::toggled, this, [=](bool checked) {
         Win::setAutoRun(AppName, checked);
         sys->sysTray->showMessage("Tip", checked ? "已添加启动项" : "已移除启动项");
     });
-    connect(act_update, &QAction::triggered, [=]() {
+    connect(act_update, &QAction::triggered, this, [=]() {
         static UpdateForm* updateForm = new UpdateForm(nullptr); //不能把this作为parent 否则最小化会同步 （这不算内存泄露吧 周期同步
         updateForm->show();
     });
-    connect(act_shortcut, &QAction::triggered, [=]() {
+    connect(act_shortcut, &QAction::triggered, this, [=]() {
         ShortcutDia* shortcutDia = new ShortcutDia(nullptr);
         shortcutDia->setAttribute(Qt::WA_DeleteOnClose, true);
-        connect(shortcutDia, &ShortcutDia::updateShortcut, [=](UINT modifiers, UINT key, QString str) {
+        connect(shortcutDia, &ShortcutDia::updateShortcut, this, [=](UINT modifiers, UINT key, QString str) {
             if (Atom) Win::unregisterHotKey(Atom, HotKeyId, Hwnd);
             HotKeyId = Win::registerHotKey(Hwnd, modifiers, key, atomStr, &Atom); //注册全局热键
             sys->sysTray->showMessage("ShortCut Tip", QString("ShortCut Teleport Updated;\n%1").arg(str));
         });
         shortcutDia->show();
     });
-    connect(act_about, &QAction::triggered, [=]() {
+    connect(act_about, &QAction::triggered, this, [=]() {
         QMessageBox::about(this, "About Follower v2.0", "[Made by MrBeanC]\n"
                                                         "My Vegetable has exploded");
     });
@@ -432,6 +469,27 @@ void Widget::setAlwaysTop(bool bTop)
     //SWP_NOACTIVATE 不激活窗口。如果未设置标志，则窗口被激活, 抢占本进程（其他进程不影响）其他窗口（即使是HWND_BOTTOM）
     //导致在本进程其他窗口上teleport后，该窗口获得焦点后会被迅速抢占(setAlwaysTop(false))
     qDebug() << "setTop:" << bTop;
+}
+
+void Widget::switchAudioOutputDevice(const QString& name, bool toPre) //封装的作用是储存变量
+{
+    static QString lastDev;
+    QStringList devs = Win::validAudioOutputDevices();
+    QString curDev = Win::activeAudioOutputDevice();
+    QString toDev;
+    if (toPre) {
+        if (devs.size() <= 1) return; //少于2个设备
+        if (lastDev.isEmpty() || lastDev == curDev || !devs.contains(lastDev)) lastDev = devs[1];
+        //第一次（无last）or last == cur（可能由于插拔设备 or 程序外修改） or 上个设备不存在
+        toDev = lastDev;
+        lastDev = curDev;
+    } else {
+        if (curDev == name || !devs.contains(name)) return; //ensure exist
+        lastDev = curDev;
+        toDev = name;
+    }
+    Win::setActiveAudioOutputDevice(toDev);
+    sys->sysTray->showMessage("Audio Tip", QString("Audio Output Device Changed: %1\nPress [TAB] on STILL to back").arg(toDev));
 }
 
 void Widget::paintEvent(QPaintEvent* event)
@@ -500,7 +558,7 @@ void Widget::mouseMoveEvent(QMouseEvent* event)
 void Widget::mouseReleaseEvent(QMouseEvent* event)
 {
     Q_UNUSED(event)
-    preMousePos = { -1, -1 }; //标记结束，防止因INPUT提前标记导致的mouseMoveEvent
+    preMousePos = {-1, -1}; //标记结束，防止因INPUT提前标记导致的mouseMoveEvent
     timer_move->start();
     lineEdit->setFocus(); //返回焦点
 }
@@ -513,7 +571,7 @@ void Widget::wheelEvent(QWheelEvent* event)
             Win::adjustBrightness(rollUp); //阻塞
             sys->sysTray->showMessage("Brightness Changed", QString("Brightness %1").arg(rollUp ? "UP" : "DOWN"), QSystemTrayIcon::Information, 500);
         } else
-            Win::simulateKeyEvent(QList<BYTE> { BYTE(rollUp ? VK_VOLUME_UP : VK_VOLUME_DOWN) });
+            Win::simulateKeyEvent(QList<BYTE> {BYTE(rollUp ? VK_VOLUME_UP : VK_VOLUME_DOWN)});
     }
     //event->delta() > 0 ? sendKey(VK_VOLUME_UP) : sendKey(VK_VOLUME_DOWN);
 }

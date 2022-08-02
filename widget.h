@@ -10,16 +10,18 @@
 #include <systemapi.h>
 #include <windows.h>
 #include "timeclipboard.h"
+#include "WinUtility.h"
 QT_BEGIN_NAMESPACE
-namespace Ui { class Widget; }
+namespace Ui {
+class Widget;
+}
 QT_END_NAMESPACE
 
-class Widget : public QWidget
-{
+class Widget : public QWidget {
     Q_OBJECT
 
 public:
-    Widget(QWidget *parent = nullptr);
+    Widget(QWidget* parent = nullptr);
     ~Widget();
 
 private:
@@ -51,7 +53,7 @@ private:
     CodeEditor* lineEdit = nullptr;
     QTimer* timer_move = nullptr;
 
-    QPointF preMousePos = { -1, -1 };
+    QPointF preMousePos = {-1, -1};
     bool isChangingState = false; //改变状态中间态
     bool hasNote; //缓存结果，避免频繁读取文件增大开销
     bool hasPower;
@@ -67,7 +69,7 @@ private:
 
     const QString iniFilePath = Path::iniFile();
 
-    TimeClipboard tClip { 128 }; //记录textChangeTime的ClipBoard
+    TimeClipboard tClip {128}; //记录textChangeTime的ClipBoard
 
 private:
     inline bool moveGuide(QPoint dest, QPointF& pos, qreal limit);
@@ -90,8 +92,8 @@ private:
     void wrtieIni(void);
     void readIni(void);
     void Init_SystemTray(void);
-    //WORD registerHotKey(UINT modifiers, UINT key, QString str, ATOM* Atom);
     void setAlwaysTop(bool bTop = true);
+    void switchAudioOutputDevice(const QString& name, bool toPre = false);
 
     // QWidget interface
 protected:

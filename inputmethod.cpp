@@ -24,7 +24,7 @@ void InputMethod::checkAndSetEn()
 
 bool InputMethod::isInList(const QString& title)
 {
-    for (auto str : qAsConst(list))
+    for (const auto& str : qAsConst(list))
         if (title.contains(str, Qt::CaseInsensitive))
             return true;
     return false;

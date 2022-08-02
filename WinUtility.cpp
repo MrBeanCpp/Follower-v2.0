@@ -115,12 +115,12 @@ QString Win::getWindowClass(HWND hwnd)
 
 HWND Win::windowFromPoint(const QPoint& pos)
 {
-    return WindowFromPoint({ pos.x(), pos.y() });
+    return WindowFromPoint({pos.x(), pos.y()});
 }
 
 HWND Win::topWinFromPoint(const QPoint& pos)
 {
-    HWND hwnd = WindowFromPoint({ pos.x(), pos.y() });
+    HWND hwnd = WindowFromPoint({pos.x(), pos.y()});
     while (GetParent(hwnd) != NULL)
         hwnd = GetParent(hwnd);
     return hwnd;
@@ -219,4 +219,32 @@ bool Win::unregisterHotKey(ATOM atom, WORD hotKeyId, HWND hwnd)
     bool ret = !del && unReg;
     qDebug() << "UnregisterHotKey:" << ret;
     return ret;
+}
+
+QStringList Win::validAudioOutputDevices() //第一个元素就是当前设备
+{
+    QStringList devList;
+    QList<QAudioDeviceInfo> audioDeviceList = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
+    for (const auto& dev : qAsConst(audioDeviceList)) {
+        const QString& name = dev.deviceName();
+        int index = name.lastIndexOf(" ("); //"耳机 (Realtek(R) Audio)"->"耳机"
+        devList << (index == -1 ? name : name.left(index));
+    }
+    return devList;
+}
+
+QString Win::activeAudioOutputDevice()
+{
+    QStringList devs {validAudioOutputDevices()};
+    return devs.empty() ? QString() : devs.at(0);
+}
+
+void Win::setActiveAudioOutputDevice(const QString& name)
+{
+    QProcess pro;
+    pro.setProgram("nircmd");
+    pro.setArguments(QStringList() << "setdefaultsounddevice" << name);
+    pro.start();
+    pro.waitForFinished(2000);
+    qDebug() << "#Changed Audio Output Device:" << name;
 }
