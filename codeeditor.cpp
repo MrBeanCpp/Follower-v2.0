@@ -162,7 +162,7 @@ void CodeEditor::textEdit(const QString& text) //不包括setText clear等代码
         QList<QPair<QString, QString>> list = executor.matchString(text);
         setCompleter(text.contains(':') ? comp : nullptr); //设置路径补全(检测':'防止盘符字母和Code混淆)
 
-        if (list.empty()) {
+        if (list.empty() || completer()) { //防止路径补全和命令匹配同时工作
             showLabel(executor.hasText() ? executor.text() : "No match code");
         } else {
             IconStrList itemList;
