@@ -20,6 +20,7 @@
 #include <cmath>
 #include <QMimeData>
 #include <QClipboard>
+#include <QToolTip>
 #include "updateform.h"
 #include "shortcutdia.h"
 #define GetKey(X) (GetAsyncKeyState(X) & 0x8000)
@@ -110,6 +111,12 @@ Widget::Widget(QWidget* parent)
     connect(sys->gTimer, &GapTimer::timeout, this, [=]() {
         if (sys->gTimer->inGap(QDateTime(QDate::currentDate(), QTime(0, 0, 0)))) //只用Time无法比较区分两天(过零点)
             sys->sysTray->showMessage("Little Tip", "It's Time to Sleep");
+    });
+
+    timer_audioTip = new QTimer(this);
+    timer_audioTip->setSingleShot(true);
+    timer_audioTip->callOnTimeout([=]() {
+        QToolTip::showText(QCursor::pos(), QString("Audio >> %1").arg(Win::activeAudioOutputDevice()), this, QRect(), 60000);
     });
 }
 
@@ -232,25 +239,6 @@ void Widget::updateWindow()
             setWindowState(Qt::WindowMinimized);
             setState(MOVE);
             break;
-        } else if (KeyState::isRelease(VK_TAB)) { //TAB切换音频输出设备
-            switchAudioOutputDevice(QString(), true);
-            /*巨复杂写法
-             * 手动记录records  需要List而非单变量的原因是切换Menu->Action时无法获取上一个Action（所以需要>三个变量）
-             * 其实可以用过Win::activeAudioOutputDevice获取
-            QString curDev = Win::activeAudioOutputDevice();
-            qDebug() << "TAB" << curDev;
-            QStringList devs {Win::validAudioOutputDevices()};
-            int N = audioRecords.size();
-            if (devs.size() > 1) {
-                QString lastDev = N ? audioRecords.at(qMax(0, N - 1)) : curDev; //处理records为空的情况
-                if (devs.contains(lastDev)) { //ensure exist
-                    QString toDev = (lastDev == curDev ? devs[1] : lastDev); //避免和当前相同（第一次的情况）
-                    Win::setActiveAudioOutputDevice(toDev);
-                    audioRecords << toDev;
-                    while (audioRecords.size() > 2) audioRecords.pop_front(); //清理过多records
-                    qDebug() << audioRecords;
-                }
-            }*/
         }
         if (isCursorInWindow()) break;
         isMove = moveWindow();
@@ -415,11 +403,13 @@ void Widget::Init_SystemTray()
         menu_audio->clear();
         //未清空actionGroup でも大丈夫かなあ
         QStringList audioDevs {Win::validAudioOutputDevices()};
+        QString curDev = audioDevs.at(0);
+        std::sort(audioDevs.begin(), audioDevs.end()); //维持列表顺序恒定
         for (const auto& dev : qAsConst(audioDevs)) {
             QAction* act = menu_audio->addAction(dev);
             act->setActionGroup(audioGroup);
             act->setCheckable(true);
-            if (dev == audioDevs.at(0))
+            if (dev == curDev)
                 act->setChecked(true);
         }
     });
@@ -602,4 +592,54 @@ void Widget::closeEvent(QCloseEvent* event)
 {
     Q_UNUSED(event)
     Win::unregisterHotKey(Atom, HotKeyId, Hwnd);
+}
+
+void Widget::keyPressEvent(QKeyEvent* event)
+{
+    if (event->isAutoRepeat()) return;
+    int key = event->key();
+    switch (state) { //采用switch是为了结构清晰
+    case STILL:
+        if (key == Qt::Key_Tab) //长按 200ms 显示当前设备信息
+            timer_audioTip->start(200);
+        break;
+    default:
+        break;
+    }
+}
+
+void Widget::keyReleaseEvent(QKeyEvent* event)
+{
+    if (event->isAutoRepeat()) return;
+    int key = event->key();
+    switch (state) {
+    case STILL:
+        if (key == Qt::Key_Tab) {
+            if (timer_audioTip->isActive()) { //短按TAB切换音频输出设备(≈110ms)
+                timer_audioTip->stop();
+                switchAudioOutputDevice(QString(), true);
+                /*巨复杂写法
+                 * 手动记录records  需要List而非单变量的原因是切换Menu->Action时无法获取上一个Action（所以需要>三个变量）
+                 * 其实可以用过Win::activeAudioOutputDevice获取
+                QString curDev = Win::activeAudioOutputDevice();
+                qDebug() << "TAB" << curDev;
+                QStringList devs {Win::validAudioOutputDevices()};
+                int N = audioRecords.size();
+                if (devs.size() > 1) {
+                    QString lastDev = N ? audioRecords.at(qMax(0, N - 1)) : curDev; //处理records为空的情况
+                    if (devs.contains(lastDev)) { //ensure exist
+                        QString toDev = (lastDev == curDev ? devs[1] : lastDev); //避免和当前相同（第一次的情况）
+                        Win::setActiveAudioOutputDevice(toDev);
+                        audioRecords << toDev;
+                        while (audioRecords.size() > 2) audioRecords.pop_front(); //清理过多records
+                        qDebug() << audioRecords;
+                    }
+                }*/
+            } else
+                QToolTip::hideText(); //由于showText有延迟 导致有时hideText检测不到visible导致hide失败(在200ms附近)
+        }
+        break;
+    default:
+        break;
+    }
 }

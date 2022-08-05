@@ -70,6 +70,7 @@ private:
     const QString iniFilePath = Path::iniFile();
 
     TimeClipboard tClip {128}; //记录textChangeTime的ClipBoard
+    QTimer* timer_audioTip = nullptr;
 
 private:
     inline bool moveGuide(QPoint dest, QPointF& pos, qreal limit);
@@ -111,5 +112,10 @@ protected:
     // QWidget interface
 protected:
     void closeEvent(QCloseEvent* event) override;
+
+    // QWidget interface
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
 };
 #endif // WIDGET_H

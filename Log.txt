@@ -647,3 +647,12 @@
 8-4：
    注：Follower 路径补全不能更新启动后新增的目录
    Fix：修正路径补全和cmd匹配同时工作的问题，限定在含':'的text中，cmd匹配不再工作
+
+8-5：
+    1.排序音频设备列表 使得排列固定 更美观
+    2.STILL界面 长按TAB 显示ToolTip：展示当前音频输出设备
+    TAB键的操作 整体移动至KeyEvent而非Main Switch：
+        让中控switch更清晰 且KeyEevent功能更强（附属功能转移 类似滚轮）
+    实现长按有两种方式：
+        1.QTimer 设置singleShot; Release时 检测是否Active
+        2.使用isAutoRepeat & setAutoRepeatDelay
