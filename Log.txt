@@ -657,7 +657,13 @@
         1.QTimer 设置singleShot; Release时 检测是否Active
         2.使用isAutoRepeat & setAutoRepeatDelay
 
-    ##关于BUG：休眠or睡眠后启动，timer_move无响应（remainingTime == 0）重新启动Timer可解决
+    ##关于BUG：休眠or睡眠后启动，timer_move无响应（remainingTime == 0）重新启动Timer可解决(timer_move->start())
+    你问我其他Timer怎么办，其实鼠标点击Follower窗口即可使所有Timer恢复，所以只要timer_move恢复即可
     1.临时方案 HotKey唤起Follower后 重启Timer
     2.拦截从睡眠|休眠中恢复的消息：WM_POWERBROADCAST: PBT_APMRESUMEAUTOMATIC 并重启Timer
         但是经测试 无法收到该消息，原因不明 nativeEvent & QAbstractNativeEventFilter::nativeEventFilter均无效
+    RegisterPowerSettingNotification可以接收到PBT_POWERSETTINGCHANGE 但对PBT_APMRESUMEAUTOMATIC无效
+
+    ##等一下：需要用RegisterSuspendResumeNotification函数注册 才能收到消息...(nativeEvent即可)
+    官方文档没讲啊aa 建议下次把左边目录同一族所有函数看一遍!! //https://docs.microsoft.com/en-us/windows/win32/power/wm-powerbroadcast
+        //参考文献：http://t.csdn.cn/CmDvX

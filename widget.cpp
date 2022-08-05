@@ -119,7 +119,7 @@ Widget::Widget(QWidget* parent)
         QToolTip::showText(QCursor::pos(), QString("Audio >> %1").arg(Win::activeAudioOutputDevice()), this, QRect(), 60000);
     });
 
-    //qApp->installNativeEventFilter(this);
+    hPowerNotify = RegisterSuspendResumeNotification(Hwnd, DEVICE_NOTIFY_WINDOW_HANDLE);
 }
 
 Widget::~Widget()
@@ -579,23 +579,16 @@ bool Widget::nativeEvent(const QByteArray& eventType, void* message, long* resul
         QtWin::taskbarDeleteTab(this);
         return true;
     } else if (msg->message == WM_HOTKEY) {
-        //        UINT modify = (UINT)LOWORD(msg->lParam);//瞬移全局快捷键
-        //        UINT key = (UINT)HIWORD(msg->lParam);
-        qDebug() << "#hotkey" << "restart timer_move";
-        timer_move->start(); //防止休眠后 timer_move 无响应
+        qDebug() << "#hotkey";
         if (msg->wParam == HotKeyId) //直接比较 ID
             if (isState(MOVE) || isState(INPUT)) //STILL不响应
                 teleportKeyDown = true;
         return true;
-    } else if (msg->message == WM_POWERBROADCAST) { //暂时无效
-        qDebug() << "nativeEvent" << msg->wParam << PBT_APMRESUMEAUTOMATIC;
-        if (msg->wParam == PBT_APMRESUMEAUTOMATIC) { //无法接收到该消息 nativeEventFilter也不行
+    } else if (msg->message == WM_POWERBROADCAST) {
+        if (msg->wParam == PBT_APMRESUMEAUTOMATIC) { //需要使用RegisterSuspendResumeNotification注册后才行
             qDebug() << "#Resume from sleep | hibernate";
             sys->sysTray->showMessage("Power Tip", "#Resume from sleep | hibernate");
-            QTimer::singleShot(10000, this, [=]() {
-                timer_move->start();
-                sys->sysTray->showMessage("Timer Tip", "Restart timer_move");
-            });
+            timer_move->start(); //防止休眠后 timer_move 无响应
         }
     }
     return false; //此处返回false，留给其他事件处理器处理
@@ -605,6 +598,7 @@ void Widget::closeEvent(QCloseEvent* event)
 {
     Q_UNUSED(event)
     Win::unregisterHotKey(Atom, HotKeyId, Hwnd);
+    UnregisterSuspendResumeNotification(hPowerNotify);
 }
 
 void Widget::keyPressEvent(QKeyEvent* event)

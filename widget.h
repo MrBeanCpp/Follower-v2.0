@@ -71,6 +71,7 @@ private:
 
     TimeClipboard tClip {128}; //记录textChangeTime的ClipBoard
     QTimer* timer_audioTip = nullptr;
+    HPOWERNOTIFY hPowerNotify = NULL; //睡眠休眠通知注册句柄
 
 private:
     inline bool moveGuide(QPoint dest, QPointF& pos, qreal limit);
