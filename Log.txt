@@ -656,3 +656,8 @@
     实现长按有两种方式：
         1.QTimer 设置singleShot; Release时 检测是否Active
         2.使用isAutoRepeat & setAutoRepeatDelay
+
+    ##关于BUG：休眠or睡眠后启动，timer_move无响应（remainingTime == 0）重新启动Timer可解决
+    1.临时方案 HotKey唤起Follower后 重启Timer
+    2.拦截从睡眠|休眠中恢复的消息：WM_POWERBROADCAST: PBT_APMRESUMEAUTOMATIC 并重启Timer
+        但是经测试 无法收到该消息，原因不明 nativeEvent & QAbstractNativeEventFilter::nativeEventFilter均无效
