@@ -85,7 +85,7 @@ private:
     const int normalHeight;
     const int Margin = DPI(5); //内部Margin，与主窗体无关
     const int TextLimit = 128;
-    const QString Holder_note = "note?";
+    const QString Holder_note = "#note?";
 
     PastCodeList pastCodeList { 10 }; //code历史记录//不能用()存在歧义(函数声明or变量声明)
 
@@ -108,7 +108,7 @@ private:
 
 public:
     void silent(void);
-    void wake(void);
+    void wake(const QString& placeHolder = "");
 };
 
 #endif // CODEEDITOR_H

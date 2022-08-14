@@ -667,3 +667,8 @@
     ##等一下：需要用RegisterSuspendResumeNotification函数注册 才能收到消息...(nativeEvent即可)
     官方文档没讲啊aa 建议下次把左边目录同一族所有函数看一遍!! //https://docs.microsoft.com/en-us/windows/win32/power/wm-powerbroadcast
         //参考文献：http://t.csdn.cn/CmDvX
+
+8-14：
+    1.统一text & placeHolder的执行方式（更改原placeHolder "note?" -> "#note?"）
+    2.复制文本后1000ms内teleport不再自动翻译，而是设置placeHolder（按下回车即可翻译），防止擅作主张（毕竟很多时候复制是为了开启下一个exe后使用）
+    3.更新托盘菜单文本

@@ -199,52 +199,47 @@ void CodeEditor::adjustWholeSize(const QString& str)
 
 void CodeEditor::returnPress()
 {
-    if (text() == "") {
-        if (placeholderText() == Holder_note)
-            executor.editNote();
-        hideDisplay();
-    } else {
-        pastCodeList << text(); //加入历史记录
+    QString Text = text().isEmpty() ? placeholderText() : text(); //统一 text & placeHolder的执行方式
 
-        Executor::State state;
-        if (lw->isVisible())
-            state = executor.run(lw->selectedText(), true); //带上extra一起匹配
-        else
-            state = executor.run(text());
+    pastCodeList << Text; //加入历史记录
 
-        if (executor.hasText()) {
-            QString echoText = executor.text();
-            if (state == Executor::JSCODE) {
-                setText(executor.JsMark); //setText不会触发edit信号（这也算好处）
-                QApplication::clipboard()->setText(echoText); //自动拷贝进剪切板
-                showLabel(echoText + "\n-Clipboard-"); //
-            } else if (state == Executor::TRANSLATE) {
-                static auto isEn = [](const QString& text) -> bool {
-                    static QRegExp reg("[ -~]+"); //ASCII中可打印字符' '-'~' \x20 - \x7e
-                    return reg.exactMatch(text);
-                };
+    Executor::State state;
+    if (lw->isVisible())
+        state = executor.run(lw->selectedText(), true); //带上extra一起匹配
+    else
+        state = executor.run(Text);
 
-                setText(executor.TransMark);
-                showLabel("Translate: " + echoText);
-                request.translate(
-                    echoText, [=](const QString& text) {
-                        if (isVisible() == false) return;
+    if (executor.hasText()) {
+        QString echoText = executor.text();
+        if (state == Executor::JSCODE) {
+            setText(executor.JsMark); //setText不会触发edit信号（这也算好处）
+            QApplication::clipboard()->setText(echoText); //自动拷贝进剪切板
+            showLabel(echoText + "\n-Clipboard-"); //
+        } else if (state == Executor::TRANSLATE) {
+            static auto isEn = [](const QString& text) -> bool {
+                static QRegExp reg("[ -~]+"); //ASCII中可打印字符' '-'~' \x20 - \x7e
+                return reg.exactMatch(text);
+            };
 
-                        if (text.isEmpty())
-                            showLabel("[WARN]Error or Timeout");
-                        else {
-                            QApplication::clipboard()->setText(text);
-                            showLabel(echoText + ":\n" + text);
-                        }
-                    },
-                    2000,
-                    "auto",
-                    isEn(echoText) ? "zh" : "en"); //自动识别
-            }
-        } else {
-            showLabel("#Command Over#");
-            emit returnWithoutEcho();
+            setText(executor.TransMark);
+            showLabel("Translate: " + echoText);
+            request.translate(
+                echoText, [=](const QString& text) {
+                    if (isVisible() == false) return;
+
+                    if (text.isEmpty())
+                        showLabel("[WARN]Error or Timeout");
+                    else {
+                        QApplication::clipboard()->setText(text);
+                        showLabel(echoText + ":\n" + text);
+                    }
+                },
+                2000, "auto",
+                isEn(echoText) ? "zh" : "en"); //自动识别
         }
+    } else {
+        showLabel("#Command Over#");
+        emit returnWithoutEcho();
     }
 }
 
@@ -254,10 +249,12 @@ void CodeEditor::silent()
     setEnabled(false);
 }
 
-void CodeEditor::wake()
+void CodeEditor::wake(const QString& placeHolder)
 {
     Hook::unHook();
-    if (!sys->noteEditor->isEmpty())
+    if (placeHolder != "")
+        setPlaceholderText(placeHolder);
+    else if (!sys->noteEditor->isEmpty())
         setPlaceholderText(Holder_note);
     else
         setPlaceholderText("");

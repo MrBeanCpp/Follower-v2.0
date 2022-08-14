@@ -218,8 +218,7 @@ void Widget::updateWindow()
         if (isTeleport) {
             if (tClip.lastTextChangeToNow() < 1000) { //在Teleport命令前1000ms内复制文本 视为希望翻译(用户意愿)
                 setState(INPUT, 4);
-                lineEdit->setText('!' + tClip.text());
-                emit lineEdit->returnPressed();
+                lineEdit->setPlaceholderText('!' + tClip.text()); //将setText & return 改为 placeHolder 防止擅作主张
             } else
                 setState(STILL, 4); //Teleport后加速，防止伸缩动画时无法检测按键
             break;
@@ -390,12 +389,12 @@ void Widget::Init_SystemTray()
     menu->setStyleSheet("QMenu{background-color:rgb(45,45,45);color:rgb(220,220,220);border:1px solid white;}"
                         "QMenu:selected{background-color:rgb(60,60,60);}");
 
-    QAction* act_autoStart = new QAction("AutoStart", menu);
+    QAction* act_autoStart = new QAction("isAutoStart", menu);
     QAction* act_update = new QAction("Update", menu);
-    QAction* act_shortcut = new QAction("ShortCut", menu);
+    QAction* act_shortcut = new QAction("Set HotKey", menu);
     QMenu* menu_audio = new QMenu("Switch AudioDev", menu);
-    QAction* act_about = new QAction("About", menu);
-    QAction* act_quit = new QAction("Peace Out", menu);
+    QAction* act_about = new QAction("About [me]?", menu);
+    QAction* act_quit = new QAction("Peace Out>>", menu);
 
     QActionGroup* audioGroup = new QActionGroup(menu_audio);
     connect(menu_audio, &QMenu::triggered, this, [=](QAction* action) { //切换设备
