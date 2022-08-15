@@ -72,6 +72,7 @@ private:
     TimeClipboard tClip {128}; //记录textChangeTime的ClipBoard
     QTimer* timer_audioTip = nullptr;
     HPOWERNOTIFY hPowerNotify = NULL; //睡眠休眠通知注册句柄
+    bool isHideAfterExecute = true;
 
 private:
     inline bool moveGuide(QPoint dest, QPointF& pos, qreal limit);
@@ -91,11 +92,12 @@ private:
     inline void teleport(void); //瞬移
     inline void setTeleportMode(TeleportMode mode);
     QSize StateSize(State _state);
-    void wrtieIni(void);
+    void writeIni(const QString &key, const QVariant &value);
     void readIni(void);
     void Init_SystemTray(void);
     void setAlwaysTop(bool bTop = true);
     void switchAudioOutputDevice(const QString& name, bool toPre = false);
+    void minimize(void);
 
     // QWidget interface
 protected:

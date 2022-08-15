@@ -52,9 +52,9 @@ Widget::Widget(QWidget* parent)
     hasNote = !sys->noteEditor->isEmpty();
 
     setState(MOVE); //在lineEdit之前调用，导致野指针
+    readIni(); //读取配置文件 before Init_SystemTray
     Init_SystemTray();
     //setTeleportMode(AUTO); //自动判断
-    readIni(); //读取配置文件
     connect(&lineEdit->executor, &Executor::changeTeleportMode, this, [=](int mode) {
         setTeleportMode(TeleportMode(mode)); //static_cast
     });
@@ -95,7 +95,10 @@ Widget::Widget(QWidget* parent)
         sys->inputM->setEnMode(Hwnd);
         SwitchToThisWindow(Hwnd, true);
     });
-    connect(lineEdit, &CodeEditor::returnWithoutEcho, this, [=]() { setState(STILL, 2); }); //命令执行后自动回复
+    connect(lineEdit, &CodeEditor::returnWithoutEcho, this, [=](bool noHide) {
+        setState(STILL, 2);
+        if (isHideAfterExecute && !noHide) minimize(); //autoHide
+    }); //命令执行后自动回复
 
     connect(sys->sysTray, &QSystemTrayIcon::activated, this, [=](QSystemTrayIcon::ActivationReason reason) {
         if (reason == QSystemTrayIcon::Trigger) {
@@ -119,7 +122,7 @@ Widget::Widget(QWidget* parent)
         QToolTip::showText(QCursor::pos(), QString("Audio >> %1").arg(Win::activeAudioOutputDevice()), this, QRect(), 60000);
     });
 
-    hPowerNotify = RegisterSuspendResumeNotification(Hwnd, DEVICE_NOTIFY_WINDOW_HANDLE);
+    hPowerNotify = RegisterSuspendResumeNotification(Hwnd, DEVICE_NOTIFY_WINDOW_HANDLE); //注册睡眠/休眠消息
 }
 
 Widget::~Widget()
@@ -237,8 +240,7 @@ void Widget::updateWindow()
             break;
         } else if (KeyState::isRelease(VK_RBUTTON) || KeyState::isRelease(VK_ESCAPE) || KeyState::isRelease(VK_BACK)) {
             //hide(); //setWindowState(Qt::WindowMinimized);
-            setWindowState(Qt::WindowMinimized);
-            setState(MOVE);
+            minimize();
             break;
         }
         if (isCursorInWindow()) break;
@@ -331,7 +333,7 @@ void Widget::teleport()
 void Widget::setTeleportMode(Widget::TeleportMode mode)
 {
     teleportMode = mode;
-    wrtieIni();
+    writeIni("Section_1/TeleportMode", QString::number(teleportMode));
 }
 
 void Widget::catchFocus()
@@ -361,10 +363,10 @@ QSize Widget::StateSize(Widget::State _state)
     return DPI(size);
 }
 
-void Widget::wrtieIni()
+void Widget::writeIni(const QString& key, const QVariant& value)
 {
     QSettings IniSet(iniFilePath, QSettings::IniFormat);
-    IniSet.setValue("Section_1/TeleportMode", QString::number(teleportMode));
+    IniSet.setValue(key, value);
 }
 
 void Widget::readIni() //文件不存在时，读取文件不会创建，写文件才会创建
@@ -381,6 +383,8 @@ void Widget::readIni() //文件不存在时，读取文件不会创建，写文�
     UINT modifiers = IniSet.value("Shortcut/teleport_modifiers", MOD_CONTROL | MOD_SHIFT).toUInt();
     UINT key = IniSet.value("Shortcut/teleport_key", 'E').toUInt();
     HotKeyId = Win::registerHotKey(Hwnd, modifiers, key, atomStr, &Atom); //注册全局热键
+
+    isHideAfterExecute = IniSet.value("isHideAfterExecute", true).toBool();
 }
 
 void Widget::Init_SystemTray()
@@ -391,6 +395,7 @@ void Widget::Init_SystemTray()
 
     QAction* act_autoStart = new QAction("isAutoStart", menu);
     QAction* act_update = new QAction("Update", menu);
+    QAction* act_autoHide = new QAction("isHideAfterExecute", menu);
     QAction* act_shortcut = new QAction("Set HotKey", menu);
     QMenu* menu_audio = new QMenu("Switch AudioDev", menu);
     QAction* act_about = new QAction("About [me]?", menu);
@@ -417,6 +422,7 @@ void Widget::Init_SystemTray()
 
     menu->addAction(act_autoStart);
     menu->addAction(act_update);
+    menu->addAction(act_autoHide);
     menu->addAction(act_shortcut);
     menu->addMenu(menu_audio);
     menu->addAction(act_about);
@@ -431,6 +437,11 @@ void Widget::Init_SystemTray()
     connect(act_update, &QAction::triggered, this, [=]() {
         static UpdateForm* updateForm = new UpdateForm(nullptr); //不能把this作为parent 否则最小化会同步 （这不算内存泄露吧 周期同步
         updateForm->show();
+    });
+    act_autoHide->setCheckable(true);
+    act_autoHide->setChecked(isHideAfterExecute);
+    connect(act_autoHide, &QAction::toggled, this, [=](bool checked) {
+        writeIni("isHideAfterExecute", isHideAfterExecute = checked);
     });
     connect(act_shortcut, &QAction::triggered, this, [=]() {
         ShortcutDia* shortcutDia = new ShortcutDia(nullptr);
@@ -481,6 +492,12 @@ void Widget::switchAudioOutputDevice(const QString& name, bool toPre) //封装�
     }
     Win::setActiveAudioOutputDevice(toDev);
     sys->sysTray->showMessage("Audio Tip", QString("Audio Output Device Changed: %1\nPress [TAB] on STILL to back").arg(toDev));
+}
+
+void Widget::minimize()
+{
+    setWindowState(Qt::WindowMinimized);
+    setState(MOVE);
 }
 
 void Widget::paintEvent(QPaintEvent* event)

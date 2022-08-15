@@ -239,7 +239,7 @@ void CodeEditor::returnPress()
         }
     } else {
         showLabel("#Command Over#");
-        emit returnWithoutEcho();
+        emit returnWithoutEcho(state == Executor::INNERCODE); //INNERCODE特判 不hide
     }
 }
 

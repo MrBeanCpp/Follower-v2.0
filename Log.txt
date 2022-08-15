@@ -672,3 +672,8 @@
     1.统一text & placeHolder的执行方式（更改原placeHolder "note?" -> "#note?"）
     2.复制文本后1000ms内teleport不再自动翻译，而是设置placeHolder（按下回车即可翻译），防止擅作主张（毕竟很多时候复制是为了开启下一个exe后使用）
     3.更新托盘菜单文本
+
+8-15：
+    新增托盘选项：是否在执行命令后隐藏（默认true; INNER除外）// 这是由于99%的情况不需要连续换起URL
+    readIni() 移至 Init_Systemtray() 之前 //需要初始化某些变量
+    修复writeIni()拼写错误 //wrtieIni     并改为泛用型函数
