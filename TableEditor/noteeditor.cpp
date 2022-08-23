@@ -38,7 +38,9 @@ NoteEditor::NoteEditor(const QString& path, QWidget* parent)
         adjustColWidth(); //调整列宽
     });
     connect(btn_clear, &QToolButton::clicked, this, &NoteEditor::clear);
+
     readFile(path);
+    _isEmpty = isEmpty(path);
 }
 
 void NoteEditor::setDateTimeEdit(int row, int col, const QDateTime& dateTime)
@@ -192,6 +194,7 @@ void NoteEditor::writeFile(const QString& path)
     file.close();
     oldList = getContentList(); //更新oldList
     QMessageBox::information(this, "Info", "Notes have been Saved!");
+    _isEmpty = isEmpty(path); //update 只有在写文件时才需要更新
 }
 
 void NoteEditor::newLine()
@@ -239,6 +242,7 @@ void NoteEditor::whatsThisEvent()
 
 bool NoteEditor::isEmpty(const QString& path)
 {
+    qDebug() << "#Check Note isEmpty";
     QFile file(path);
     if (file.open(QFile::ReadOnly | QFile::Text)) {
         QTextStream text(&file);
@@ -252,7 +256,7 @@ bool NoteEditor::isEmpty(const QString& path)
 
 bool NoteEditor::isEmpty()
 {
-    return isEmpty(path);
+    return _isEmpty;
 }
 
 void NoteEditor::resizeEvent(QResizeEvent* event)

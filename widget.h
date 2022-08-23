@@ -55,7 +55,6 @@ private:
 
     QPointF preMousePos = {-1, -1};
     bool isChangingState = false; //改变状态中间态
-    bool hasNote; //缓存结果，避免频繁读取文件增大开销
     bool hasPower;
 
     bool teleportKeyDown = false;

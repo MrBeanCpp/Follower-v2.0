@@ -49,8 +49,6 @@ Widget::Widget(QWidget* parent)
     lineEdit->move(Margin, Margin);
     lineEdit->silent();
 
-    hasNote = !sys->noteEditor->isEmpty();
-
     setState(MOVE); //在lineEdit之前调用，导致野指针
     readIni(); //读取配置文件 before Init_SystemTray
     Init_SystemTray();
@@ -277,8 +275,6 @@ void Widget::setState(Widget::State toState, int step)
 
     //if (!isActiveWindow()) SetActiveWindow(Hwnd); //SwitchToThisWindow(Hwnd, true); //activateWindow();
     //update();
-
-    hasNote = !sys->noteEditor->isEmpty(); //降低更新频率 防止反复读文件
 
     if (_state == INPUT) {
         lineEdit->silent();
@@ -522,7 +518,7 @@ void Widget::paintEvent(QPaintEvent* event)
     pen.setWidth(DPI(6));
     pen.setCapStyle(Qt::RoundCap); //圆形笔头，否则方形点
     if (state == MOVE || state == STILL) { //显示相关信息标识
-        if (hasNote) {
+        if (!sys->noteEditor->isEmpty()) {
             pen.setColor(QColor(200, 0, 0));
             painter.setPen(pen);
             painter.drawPoint(DPI(QPoint(8, 8)));

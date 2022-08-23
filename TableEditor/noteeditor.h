@@ -21,6 +21,7 @@ private:
     const QString DateTimeFormat = "yyyy-MM-dd hh:mm";
     QScrollBar* vScrollBar;
     static const QStringList RepeatMode;
+    bool _isEmpty = false; //缓存 防止反复读文件 如果直接修改文件则不同步 但是没必要为了0.01%的情况 舍弃99.99%时的性能
 
 private:
     void setDateTimeEdit(int row, int col, const QDateTime& dateTime = QDateTime::currentDateTime());
