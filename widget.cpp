@@ -408,6 +408,7 @@ void Widget::Init_SystemTray()
         menu_audio->clear();
         //未清空actionGroup でも大丈夫かなあ
         QStringList audioDevs {Win::validAudioOutputDevices()};
+        if (audioDevs.empty()) return;
         QString curDev = audioDevs.at(0);
         std::sort(audioDevs.begin(), audioDevs.end()); //维持列表顺序恒定
         for (const auto& dev : qAsConst(audioDevs)) {
