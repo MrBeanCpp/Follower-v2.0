@@ -276,6 +276,9 @@ void Widget::setState(Widget::State toState, int step)
     //if (!isActiveWindow()) SetActiveWindow(Hwnd); //SwitchToThisWindow(Hwnd, true); //activateWindow();
     //update();
 
+    if (toState == STILL)
+        audioOuptputDev = Win::activeAudioOutputDevice(); //update
+
     if (_state == INPUT) {
         lineEdit->silent();
     }
@@ -487,6 +490,7 @@ void Widget::switchAudioOutputDevice(const QString& name, bool toPre) //封装�
         toDev = name;
     }
     Win::setActiveAudioOutputDevice(toDev);
+    audioOuptputDev = toDev; //update
     sys->sysTray->showMessage("Audio Tip", QString("Audio Output Device Changed: %1\nPress [TAB] on STILL to back").arg(toDev));
 }
 
@@ -509,6 +513,16 @@ void Widget::paintEvent(QPaintEvent* event)
     } else if (state == STILL) {
         painter.setFont(QFont("Consolas", 14));
         painter.drawText(QRect(rect.left(), rect.top() + DPI(8), rect.right(), rect.bottom()), Qt::AlignCenter, "Need?");
+
+        QString dev;
+        if (audioOuptputDev.contains("扬声器") || audioOuptputDev.contains("Speakers", Qt::CaseInsensitive))
+            dev = ""; //🔔🔊 //咳咳 学习QQ，免提就什么都不显示，节省一个图标，更清爽
+        else if (audioOuptputDev.contains("耳机") || audioOuptputDev.contains("Headphones", Qt::CaseInsensitive))
+            dev = "🎧";
+        else
+            dev = "🎚️"; //by Darli: 如果时无法识别的类型（或者自定义名称） 则balabala
+        painter.setFont(QFont("Consolas", 8));
+        painter.drawText(QRect(rect.left(), rect.top() + DPI(1), rect.right() - DPI(1), rect.bottom()), Qt::AlignRight | Qt::AlignTop, dev);
 
         painter.setFont(QFont("Consolas", 10));
         painter.drawText(QRect(rect.left(), rect.top(), rect.right(), rect.bottom() - DPI(18)), Qt::AlignCenter, QTime::currentTime().toString());

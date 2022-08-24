@@ -72,6 +72,7 @@ private:
     QTimer* timer_audioTip = nullptr;
     HPOWERNOTIFY hPowerNotify = NULL; //睡眠休眠通知注册句柄
     bool isHideAfterExecute = true;
+    QString audioOuptputDev = Win::activeAudioOutputDevice(); //缓存 避免paintEvent频繁获取 //首次获取会卡顿可能是载入dll 所以放这儿
 
 private:
     inline bool moveGuide(QPoint dest, QPointF& pos, qreal limit);
