@@ -29,7 +29,7 @@ private:
 
 private:
     QPointF winPos; //center pos
-    const qreal disLimit = 10;
+    //const qreal disLimit = 10;
     const int Margin = DPI(5); //between MainWindow and LineEditor
     HWND Hwnd;
     QRect Screen;
@@ -75,8 +75,8 @@ private:
     QString audioOuptputDev = Win::activeAudioOutputDevice(); //缓存 避免paintEvent频繁获取 //首次获取会卡顿可能是载入dll 所以放这儿
 
 private:
-    inline bool moveGuide(QPoint dest, QPointF& pos, qreal limit);
-    inline bool moveWindow(void);
+    inline bool moveGuide(QPoint dest, QPointF& pos, qreal speed, qreal limit = 10);
+    inline bool moveWindow(qreal speed = 2);
     inline void getInputFocus(void);
     inline void catchFocus(void);
     void changeSizeSlow(QSize size, int step = 1, bool isAuto = false); //auto

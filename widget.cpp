@@ -128,9 +128,9 @@ Widget::~Widget()
     delete ui;
 }
 
-bool Widget::moveGuide(QPoint dest, QPointF& pos, qreal limit)
+bool Widget::moveGuide(QPoint dest, QPointF& pos, qreal speed, qreal limit)
 {
-    const qreal Rate = DPI(2);
+    const qreal Rate = DPI(speed);
     qreal x = pos.x(), y = pos.y();
     qreal Dx = dest.x() - x, Dy = dest.y() - y;
     qreal Dis = sqrt(Dx * Dx + Dy * Dy);
@@ -154,9 +154,9 @@ bool Widget::moveGuide(QPoint dest, QPointF& pos, qreal limit)
     return dx || dy;
 }
 
-bool Widget::moveWindow()
+bool Widget::moveWindow(qreal speed)
 {
-    bool isMove = moveGuide(QCursor::pos(), winPos, disLimit);
+    bool isMove = moveGuide(QCursor::pos(), winPos, speed);
     if (isMove && isState(MOVE) && !isMinimized())
         move(centerToLT(winPos.toPoint()));
     return isMove;
@@ -202,7 +202,10 @@ void Widget::changeSizeSlow(QSize size, int step, bool isAuto)
 
 void Widget::updateWindow()
 {
-    //qDebug() << QTime::currentTime();
+    static QDateTime lastTime = QDateTime::currentDateTime();
+    QDateTime nowTime = QDateTime::currentDateTime();
+    qint64 gap = lastTime.msecsTo(nowTime);
+
     bool isMove;
     bool isTeleport;
     KeyState::clearLock(); //保证检测一次
@@ -228,7 +231,7 @@ void Widget::updateWindow()
         if (!Win::isForeWindow(Hwnd) && Win::isTopMost(Hwnd)) //若焦点转移则取消置顶
             setAlwaysTop(false);
 
-        isMove = moveWindow();
+        isMove = moveWindow(qMin(2.0 * gap / timer_move->interval(), 4.0)); //STILL->MOVE的时候伸缩动画占用时间 会导致Gap太大 所以要限制
         if (!isMove && isUnderCursor())
             setState(STILL);
         break;
@@ -256,6 +259,8 @@ void Widget::updateWindow()
     default:
         break;
     }
+
+    lastTime = nowTime;
 }
 
 QPoint Widget::centerToLT(const QPoint& pos)
