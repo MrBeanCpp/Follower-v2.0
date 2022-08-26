@@ -699,3 +699,6 @@
 
     ##Follower在最小化后，会被Sys看成后台进程，导致QTimer的10ms Gap -> 16ms，导致teleport时的几秒钟move较慢，一段时后恢复为前台进程
     故检测两次QTimer触发的Gap，动态调整move speed
+
+8-26：
+    新增command排序：按照运行频次排序（全匹配优先级最高 无视频次）；QMap以binary写入.dat文件 方便读写

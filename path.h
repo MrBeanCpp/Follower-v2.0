@@ -13,6 +13,7 @@ public:
     static QString cmdList(void);
     static QString inputMethodList(void);
     static QString noteList(void);
+    static QString runTimesData(void);
 };
 
 #endif // PATH_H

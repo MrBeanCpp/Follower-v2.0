@@ -25,3 +25,8 @@ QString Path::noteList()
 {
     return QApplication::applicationDirPath() + dirName + "/noteList.txt";
 }
+
+QString Path::runTimesData()
+{
+    return QApplication::applicationDirPath() + dirName + "/runTimesMap.dat";
+}

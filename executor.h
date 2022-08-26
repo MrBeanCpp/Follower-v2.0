@@ -58,6 +58,7 @@ public:
     const QString inputMethodListPath = Path::inputMethodList();
     const QString noteListPath = Path::noteList();
     const QString iniFilePath = Path::iniFile();
+    const QString runTimesDataPath = Path::runTimesData();
 
 private:
     enum CmdSymbol {
@@ -86,6 +87,7 @@ private:
     };
     QJSEngine JsEngine;
     QString echoText;
+    QMap<QString, int> runTimesMap;
 
     //CmdEditor* cmdEditor = nullptr;
     //NoteEditor* noteEditor = nullptr;

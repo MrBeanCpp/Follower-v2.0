@@ -6,6 +6,7 @@
 #include <QTextStream>
 #include <QUrl>
 #include <windows.h>
+#include <QMessageBox>
 
 Executor::Executor(QObject* parent)
     : QObject(parent)
@@ -14,6 +15,28 @@ Executor::Executor(QObject* parent)
     //cmdEditor = new CmdEditor(cmdListPath);
     //noteEditor = new NoteEditor(noteListPath);
     readCmdList();
+
+    connect(qApp, &QApplication::aboutToQuit, this, [=]() { //write
+        QFile file(runTimesDataPath);
+        if (!file.open(QFile::WriteOnly)) {
+            QMessageBox::critical(nullptr, "File Write Error", "Cannot open \"runTimesMap.dat\"");
+            return;
+        }
+        QDataStream data(&file);
+        data << runTimesMap;
+        qDebug() << "#Write runTimesMap.dat";
+    });
+
+    if (QFile::exists(runTimesDataPath)) {
+        QFile file(runTimesDataPath); //read
+        if (!file.open(QFile::ReadOnly)) {
+            QMessageBox::critical(nullptr, "File Read Error", "Cannot open \"runTimesMap.dat\"");
+            return;
+        }
+        QDataStream data(&file);
+        data >> runTimesMap;
+        qDebug() << "#Read runTimesMap.dat";
+    }
 }
 
 void Executor::readCmdList()
@@ -22,7 +45,7 @@ void Executor::readCmdList()
     CmdEditor::TableList list = sys->cmdEditor->getContentList();
     cmdList.clear();
     for (QStringList& line : list)
-        cmdList.append({ line.at(0), line.at(1), line.at(2), line.at(3) });
+        cmdList.append({line.at(0), line.at(1), line.at(2), line.at(3)});
     std::sort(cmdList.begin(), cmdList.end(), [](const Command& a, const Command& b) {
         return a.code.length() < b.code.length();
     });
@@ -163,6 +186,8 @@ Executor::State Executor::run(const QString& code, bool isWithExtra)
     if (isFind) {
         Command cmd = *iter;
         openFile(cmd.filename, cmd.parameter);
+        runTimesMap[cmd.filename + cmd.parameter]++; //统计运行次数，filename+param作为唯一标识
+        //qDebug() << runTimesMap;
         return CODE;
     } else if (isFind_inner) {
         InnerCommand cmd = *iter_inner;
@@ -200,10 +225,25 @@ QList<QPair<QString, QString>> Executor::matchString(const QString& str, State* 
         return list;
     }
 
+    QMap<QString, Command> codeFile;
     for (const Command& cmd : qAsConst(cmdList))
-        if (isMatch(cmd.code, str, cs)) //忽略大小写//cmd.code.indexOf(str, 0, Qt::CaseInsensitive) == 0)
+        if (isMatch(cmd.code, str, cs)) { //忽略大小写//cmd.code.indexOf(str, 0, Qt::CaseInsensitive) == 0)
             list << qMakePair(cmd.code + cmd.extra, cmd.filename);
+            codeFile[cmd.code + cmd.extra + cmd.filename] = cmd; //indexing
+        }
     //无需去重 可能出现同名不同path等 让用户选择
+    if (!list.empty()) {
+        std::sort(list.begin(), list.end(), [=, &codeFile](const QPair<QString, QString>& a, const QPair<QString, QString>& b) -> bool {
+            const Command& ca = codeFile[a.first + a.second];
+            const Command& cb = codeFile[b.first + b.second];
+            if (ca.code.compare(str, cs) == 0) //全匹配优先级最高
+                return true;
+            else if (cb.code.compare(str, cs) == 0)
+                return false;
+            else //降序
+                return runTimesMap.value(ca.filename + ca.parameter) > runTimesMap.value(cb.filename + cb.parameter);
+        });
+    }
 
     QSet<QString> codeSet;
     for (const InnerCommand& cmd : qAsConst(innerCmdList))
