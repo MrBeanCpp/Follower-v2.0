@@ -584,7 +584,18 @@ void Widget::mouseReleaseEvent(QMouseEvent* event)
     Q_UNUSED(event)
     preMousePos = {-1, -1}; //标记结束，防止因INPUT提前标记导致的mouseMoveEvent
     timer_move->start();
-    lineEdit->setFocus(); //返回焦点
+
+    if (isState(INPUT))
+        lineEdit->setFocus(); //返回焦点
+    else if (isState(STILL)){
+         auto button = event->button();
+        if (button == Qt::MidButton)
+            switchAudioOutputDevice(QString(), true);
+        else if (button == Qt::ForwardButton)
+            Win::adjustBrightness(true); //+
+        else if (button == Qt::BackButton)
+            Win::adjustBrightness(false); //-
+    }
 }
 
 void Widget::wheelEvent(QWheelEvent* event)
