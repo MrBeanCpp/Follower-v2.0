@@ -74,6 +74,11 @@ private:
     bool isHideAfterExecute = true;
     QString audioOuptputDev = Win::activeAudioOutputDevice(); //缓存 避免paintEvent频繁获取 //首次获取会卡顿可能是载入dll 所以放这儿
 
+    int on_brightness;
+    int on_reflash;
+    int off_brightness;
+    int off_reflash;
+
 private:
     inline bool moveGuide(QPoint dest, QPointF& pos, qreal speed, qreal limit = 10);
     inline bool moveWindow(qreal speed = 2);
@@ -98,6 +103,9 @@ private:
     void setAlwaysTop(bool bTop = true);
     void switchAudioOutputDevice(const QString& name, bool toPre = false);
     void minimize(void);
+
+signals:
+    void powerSwitched(bool isPowerOn, bool force = false);
 
     // QWidget interface
 protected:

@@ -203,6 +203,22 @@ void Win::adjustBrightness(bool isUp, int delta)
     qDebug() << "#Changed Brightness";
 }
 
+void Win::setBrightness(int brightness)
+{
+    if (brightness < 0) return;
+
+    QProcess process;
+    process.setProgram("Powershell");
+    process.setArguments(QStringList() << "-Command"
+                                       << QString("&{$info = Get-Ciminstance -Namespace root/WMI -ClassName WmiMonitorBrightness;"
+                                                  "$monitor = Get-WmiObject -ns root/wmi -class wmiMonitorBrightNessMethods;"
+                                                  "$monitor.WmiSetBrightness(0, %1)}")
+                                              .arg(brightness));
+    process.start();
+    process.waitForFinished();
+    qDebug() << "#Set Brightness:" << brightness;
+}
+
 WORD Win::registerHotKey(HWND hwnd, UINT modifiers, UINT key, QString str, ATOM* atom)
 {
     *atom = GlobalAddAtomA(str.toStdString().c_str());
@@ -247,4 +263,28 @@ void Win::setActiveAudioOutputDevice(const QString& name)
     pro.start();
     pro.waitForFinished(2000);
     qDebug() << "#Changed Audio Output Device:" << name;
+}
+
+void Win::setScreenReflashRate(int rate)
+{
+    if (rate < 0) return;
+    if (rate == getScreenReflashRate()) return;
+
+    QProcess pro;
+    pro.setProgram("QRes");
+    pro.setArguments(QStringList() << QString("/r:%1").arg(rate));
+    pro.start();
+    pro.waitForFinished(8000);
+    qDebug() << "#Change Screen Reflash Rate:" << rate << (rate == getScreenReflashRate());
+}
+
+DWORD Win::getScreenReflashRate()
+{
+    DEVMODE lpDevMode;
+    memset(&lpDevMode, 0, sizeof(DEVMODE));
+    lpDevMode.dmSize = sizeof(DEVMODE);
+    lpDevMode.dmDriverExtra = 0;
+
+    EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &lpDevMode);
+    return lpDevMode.dmDisplayFrequency;
 }

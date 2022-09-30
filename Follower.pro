@@ -36,6 +36,7 @@ SOURCES += \
     keystate.cpp \
     main.cpp \
     path.cpp \
+    powersettingdia.cpp \
     request.cpp \
     shortcutdia.cpp \
     systemapi.cpp \
@@ -59,6 +60,7 @@ HEADERS += \
     inputmethod.h \
     keystate.h \
     path.h \
+    powersettingdia.h \
     request.h \
     shortcutdia.h \
     systemapi.h \
@@ -67,6 +69,7 @@ HEADERS += \
     widget.h
 
 FORMS += \
+    powersettingdia.ui \
     shortcutdia.ui \
     tablebase.ui \
     updateform.ui \

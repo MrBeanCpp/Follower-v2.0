@@ -31,11 +31,14 @@ public:
     static void setAutoRun(const QString& AppName, bool isAuto);
     static bool isAutoRun(const QString& AppName);
     static void adjustBrightness(bool isUp, int delta = 10);
+    static void setBrightness(int brightness);
     static WORD registerHotKey(HWND hwnd, UINT modifiers, UINT key, QString str, ATOM* atom);
     static bool unregisterHotKey(ATOM atom, WORD hotKeyId, HWND hwnd);
     static QStringList validAudioOutputDevices(void);
     static QString activeAudioOutputDevice(void);
     static void setActiveAudioOutputDevice(const QString& name);
+    static void setScreenReflashRate(int rate);
+    static DWORD getScreenReflashRate(void);
 };
 
 #endif // WIN_H

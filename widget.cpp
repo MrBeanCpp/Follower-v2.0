@@ -23,6 +23,7 @@
 #include <QToolTip>
 #include "updateform.h"
 #include "shortcutdia.h"
+#include "powersettingdia.h"
 #define GetKey(X) (GetAsyncKeyState(X) & 0x8000)
 Widget::Widget(QWidget* parent)
     : QWidget(parent), ui(new Ui::Widget)
@@ -76,10 +77,10 @@ Widget::Widget(QWidget* parent)
 
         sys->inputM->checkAndSetEn(); //En输入法//降低更新频率
 
-        if (hasPower && !(hasPower = Win::isPowerOn())) //降低更新频率,防止反复调用 Win API
-            sys->sysTray->showMessage("Little Tip", "Power Down");
-        else if (!hasPower && (hasPower = Win::isPowerOn()))
-            sys->sysTray->showMessage("Little Tip", "Power Up");
+//        if (hasPower && !(hasPower = Win::isPowerOn())) //降低更新频率,防止反复调用 Win API
+//            sys->sysTray->showMessage("Little Tip", "Power Down");
+//        else if (!hasPower && (hasPower = Win::isPowerOn()))
+//            sys->sysTray->showMessage("Little Tip", "Power Up");
     });
     timer_beat->start(1000);
 
@@ -121,6 +122,23 @@ Widget::Widget(QWidget* parent)
     });
 
     hPowerNotify = RegisterSuspendResumeNotification(Hwnd, DEVICE_NOTIFY_WINDOW_HANDLE); //注册睡眠/休眠消息
+
+    connect(this, &Widget::powerSwitched, this, [=](bool isPowerOn, bool force){
+        qDebug() << "#Power:" << isPowerOn;
+        if(force || hasPower != isPowerOn){
+            if(isPowerOn){
+                sys->sysTray->showMessage("Little Tip", "Power Up");
+                Win::setScreenReflashRate(on_reflash); //休眠恢复中可能更改不生效
+                Win::setBrightness(on_brightness);
+            }else{
+                sys->sysTray->showMessage("Little Tip", "Power Down");
+                Win::setScreenReflashRate(off_reflash);
+                Win::setBrightness(off_brightness);
+            }
+        }
+        hasPower = isPowerOn;
+    });
+    emit powerSwitched(Win::isPowerOn(), true); //开机调整
 }
 
 Widget::~Widget()
@@ -389,6 +407,11 @@ void Widget::readIni() //文件不存在时，读取文件不会创建，写文�
     HotKeyId = Win::registerHotKey(Hwnd, modifiers, key, atomStr, &Atom); //注册全局热键
 
     isHideAfterExecute = IniSet.value("isHideAfterExecute", true).toBool();
+
+    on_brightness = IniSet.value("PowerSetting/PowerOn/brightness", -1).toInt();
+    on_reflash = IniSet.value("PowerSetting/PowerOn/reflash rate", -1).toInt();
+    off_brightness = IniSet.value("PowerSetting/PowerOff/brightness", -1).toInt();
+    off_reflash = IniSet.value("PowerSetting/PowerOff/reflash rate", -1).toInt();
 }
 
 void Widget::Init_SystemTray()
@@ -401,6 +424,7 @@ void Widget::Init_SystemTray()
     QAction* act_update = new QAction("Update", menu);
     QAction* act_autoHide = new QAction("isHideAfterExecute", menu);
     QAction* act_shortcut = new QAction("Set HotKey", menu);
+    QAction* act_power = new QAction("Power Setting", menu);
     QMenu* menu_audio = new QMenu("Switch AudioDev", menu);
     QAction* act_about = new QAction("About [me]?", menu);
     QAction* act_quit = new QAction("Peace Out>>", menu);
@@ -429,6 +453,7 @@ void Widget::Init_SystemTray()
     menu->addAction(act_update);
     menu->addAction(act_autoHide);
     menu->addAction(act_shortcut);
+    menu->addAction(act_power);
     menu->addMenu(menu_audio);
     menu->addAction(act_about);
     menu->addAction(act_quit);
@@ -458,6 +483,19 @@ void Widget::Init_SystemTray()
         });
         shortcutDia->show();
     });
+    connect(act_power, &QAction::triggered, this, [=](){
+        PowerSettingDia* powerDia = new PowerSettingDia(on_brightness, on_reflash, off_brightness, off_reflash);
+        powerDia->setAttribute(Qt::WA_DeleteOnClose, true);
+        connect(powerDia, &PowerSettingDia::powerSettingApply, this, [=](int on_brightness, int on_reflash, int off_brightness, int off_reflash){
+            this->on_brightness = on_brightness;
+            this->on_reflash = on_reflash;
+            this->off_brightness = off_brightness;
+            this->off_reflash = off_reflash;
+            sys->sysTray->showMessage("PowerTip", "Power Setting has been updated");
+        });
+        powerDia->show();
+    });
+
     connect(act_about, &QAction::triggered, this, [=]() {
         QMessageBox::about(this, "About Follower v2.0", "[Made by MrBeanC]\n"
                                                         "My Vegetable has exploded");
@@ -632,6 +670,10 @@ bool Widget::nativeEvent(const QByteArray& eventType, void* message, long* resul
             qDebug() << "#Resume from sleep | hibernate";
             sys->sysTray->showMessage("Power Tip", "#Resume from sleep | hibernate");
             timer_move->start(); //防止休眠后 timer_move 无响应
+            emit powerSwitched(Win::isPowerOn(), true); //休眠恢复中 setReflashRate可能失败 所以恢复后 再次执行
+        }else if (msg->wParam == PBT_APMPOWERSTATUSCHANGE){ //检测通断电 or 电量变化 具体需要手动检测
+            qDebug() << "#PowerStatusChanged";
+            emit powerSwitched(Win::isPowerOn());
         }
     }
     return false; //此处返回false，留给其他事件处理器处理
