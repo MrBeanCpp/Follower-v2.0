@@ -8,7 +8,7 @@ PowerSettingDia::PowerSettingDia(int on_brightness, int on_reflash, int off_brig
     ui(new Ui::PowerSettingDia)
 {
     ui->setupUi(this);
-    setWindowTitle("PowerSetting");
+    setWindowTitle("PowerSetting [-1 == unused]");
     resize(DPI(size()));
 
     ui->on_brightness->setValue(on_brightness);

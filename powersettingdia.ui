@@ -65,8 +65,14 @@
            <property name="showGroupSeparator" stdset="0">
             <bool>false</bool>
            </property>
+           <property name="minimum">
+            <number>-1</number>
+           </property>
            <property name="maximum">
             <number>100</number>
+           </property>
+           <property name="value">
+            <number>-1</number>
            </property>
           </widget>
          </item>
@@ -100,8 +106,14 @@
            <property name="showGroupSeparator" stdset="0">
             <bool>false</bool>
            </property>
+           <property name="minimum">
+            <number>-1</number>
+           </property>
            <property name="maximum">
             <number>360</number>
+           </property>
+           <property name="value">
+            <number>-1</number>
            </property>
           </widget>
          </item>
@@ -150,8 +162,14 @@
            <property name="showGroupSeparator" stdset="0">
             <bool>false</bool>
            </property>
+           <property name="minimum">
+            <number>-1</number>
+           </property>
            <property name="maximum">
             <number>100</number>
+           </property>
+           <property name="value">
+            <number>-1</number>
            </property>
           </widget>
          </item>
@@ -185,8 +203,14 @@
            <property name="showGroupSeparator" stdset="0">
             <bool>false</bool>
            </property>
+           <property name="minimum">
+            <number>-1</number>
+           </property>
            <property name="maximum">
             <number>360</number>
+           </property>
+           <property name="value">
+            <number>-1</number>
            </property>
           </widget>
          </item>
