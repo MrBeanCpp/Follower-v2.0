@@ -37,7 +37,7 @@ private:
     QWinTaskbarButton* taskBarBtn = nullptr;
     QWinTaskbarProgress* taskBarProgress = nullptr;
 
-    const QString ver = "v2.11.2";
+    const QString ver = "v2.11.3";
 
     // QWidget interface
 protected:

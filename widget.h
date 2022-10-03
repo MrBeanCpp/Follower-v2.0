@@ -11,6 +11,7 @@
 #include <windows.h>
 #include "timeclipboard.h"
 #include "WinUtility.h"
+#include "powersettingdia.h"
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class Widget;
@@ -74,10 +75,7 @@ private:
     bool isHideAfterExecute = true;
     QString audioOuptputDev = Win::activeAudioOutputDevice(); //缓存 避免paintEvent频繁获取 //首次获取会卡顿可能是载入dll 所以放这儿
 
-    int on_brightness;
-    int on_reflash;
-    int off_brightness;
-    int off_reflash;
+    ScreenSetting screenSetting;
 
 private:
     inline bool moveGuide(QPoint dest, QPointF& pos, qreal speed, qreal limit = 10);

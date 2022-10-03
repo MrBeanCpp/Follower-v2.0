@@ -717,3 +717,4 @@
 
 10-3：
     用Windows API：ChangeDisplaySettings代替QRes，减少对第三方的依赖，且加快运行速度
+    使用struct：ScreenSetting封装on/off reflash brightness等信息，防止杂乱

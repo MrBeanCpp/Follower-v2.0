@@ -7,16 +7,30 @@ namespace Ui {
 class PowerSettingDia;
 }
 
-class PowerSettingDia : public QDialog
-{
+struct ScreenSetting {
+    ScreenSetting() = default;
+    ScreenSetting(int on_brightness, int on_reflash, int off_brightness, int off_reflash)
+    {
+        brightness[0] = off_brightness;
+        brightness[1] = on_brightness;
+        reflash[0] = off_reflash;
+        reflash[1] = on_reflash;
+    }
+    int brightness[2];
+    int reflash[2];
+};
+
+class PowerSettingDia : public QDialog {
     Q_OBJECT
 
 public:
-    explicit PowerSettingDia(int on_brightness, int on_reflash, int off_brightness, int off_reflash, QWidget *parent = nullptr);
+    explicit PowerSettingDia(const ScreenSetting &screenSetting, QWidget *parent = nullptr);
     ~PowerSettingDia();
 
+    static ScreenSetting readScreenSettings(void);
+
 signals:
-    void powerSettingApply(int on_brightness, int on_reflash, int off_brightness, int off_reflash);
+    void powerSettingApply(ScreenSetting screenSetting);
 
 private:
     Ui::PowerSettingDia *ui;

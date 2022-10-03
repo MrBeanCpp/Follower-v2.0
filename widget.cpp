@@ -23,7 +23,6 @@
 #include <QToolTip>
 #include "updateform.h"
 #include "shortcutdia.h"
-#include "powersettingdia.h"
 #define GetKey(X) (GetAsyncKeyState(X) & 0x8000)
 Widget::Widget(QWidget* parent)
     : QWidget(parent), ui(new Ui::Widget)
@@ -128,12 +127,12 @@ Widget::Widget(QWidget* parent)
         if (force || hasPower != isPowerOn) {
             if (isPowerOn) {
                 sys->sysTray->showMessage("Little Tip", "Power Up");
-                Win::setScreenReflashRate(on_reflash); //休眠恢复中可能更改不生效
-                Win::setBrightness(on_brightness);
+                Win::setScreenReflashRate(screenSetting.reflash[1]); //休眠恢复中可能更改不生效
+                Win::setBrightness(screenSetting.brightness[1]);
             } else {
                 sys->sysTray->showMessage("Little Tip", "Power Down");
-                Win::setScreenReflashRate(off_reflash);
-                Win::setBrightness(off_brightness);
+                Win::setScreenReflashRate(screenSetting.reflash[0]);
+                Win::setBrightness(screenSetting.brightness[0]);
             }
         }
         hasPower = isPowerOn;
@@ -410,10 +409,7 @@ void Widget::readIni() //文件不存在时，读取文件不会创建，写文�
 
     isHideAfterExecute = IniSet.value("isHideAfterExecute", true).toBool();
 
-    on_brightness = IniSet.value("PowerSetting/PowerOn/brightness", -1).toInt();
-    on_reflash = IniSet.value("PowerSetting/PowerOn/reflash rate", -1).toInt();
-    off_brightness = IniSet.value("PowerSetting/PowerOff/brightness", -1).toInt();
-    off_reflash = IniSet.value("PowerSetting/PowerOff/reflash rate", -1).toInt();
+    screenSetting = PowerSettingDia::readScreenSettings();
 }
 
 void Widget::Init_SystemTray()
@@ -486,13 +482,10 @@ void Widget::Init_SystemTray()
         shortcutDia->show();
     });
     connect(act_power, &QAction::triggered, this, [=]() {
-        PowerSettingDia* powerDia = new PowerSettingDia(on_brightness, on_reflash, off_brightness, off_reflash);
+        PowerSettingDia* powerDia = new PowerSettingDia(screenSetting);
         powerDia->setAttribute(Qt::WA_DeleteOnClose, true);
-        connect(powerDia, &PowerSettingDia::powerSettingApply, this, [=](int on_brightness, int on_reflash, int off_brightness, int off_reflash) {
-            this->on_brightness = on_brightness;
-            this->on_reflash = on_reflash;
-            this->off_brightness = off_brightness;
-            this->off_reflash = off_reflash;
+        connect(powerDia, &PowerSettingDia::powerSettingApply, this, [=](ScreenSetting screenSetting) {
+            this->screenSetting = screenSetting;
             sys->sysTray->showMessage("PowerTip", "Power Setting has been updated");
         });
         powerDia->show();
