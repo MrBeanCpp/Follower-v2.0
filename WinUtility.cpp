@@ -282,7 +282,7 @@ void Win::setScreenReflashRate(int rate)
     lpDevMode.dmSize = sizeof(DEVMODE);
     lpDevMode.dmDisplayFrequency = rate;
     lpDevMode.dmFields = DM_DISPLAYFREQUENCY;
-    LONG ret = ChangeDisplaySettings(&lpDevMode, 0);
+    LONG ret = ChangeDisplaySettings(&lpDevMode, CDS_UPDATEREGISTRY); //&保存于注册表 如果使用0，会导致Apex时有可能重置回60HZ（注册表
     qDebug() << "#Change Screen Reflash Rate(API):" << rate << (ret == DISP_CHANGE_SUCCESSFUL);
 }
 
