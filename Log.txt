@@ -714,3 +714,6 @@
     动机：MSI Center在断电时可以自动降低刷新率 但是在通电时，如果在休眠中，则无法调回高刷
     PBT_APMPOWERSTATUSCHANGE可以解决上述情况↑，在休眠恢复时 也会触发
     但是问题在于，从休眠中恢复时 调整刷新率无效（使用QRes /r:%1），故PBT_APMRESUMEAUTOMATIC时再次调整刷新率
+
+10-3：
+    用Windows API：ChangeDisplaySettings代替QRes，减少对第三方的依赖，且加快运行速度

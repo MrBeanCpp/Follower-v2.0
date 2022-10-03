@@ -268,23 +268,43 @@ void Win::setActiveAudioOutputDevice(const QString& name)
 void Win::setScreenReflashRate(int rate)
 {
     if (rate < 0) return;
-    if (rate == getScreenReflashRate()) return;
+    if (rate == (int)getCurrentScreenReflashRate()) return;
 
+    /*QRes
     QProcess pro;
     pro.setProgram("QRes");
     pro.setArguments(QStringList() << QString("/r:%1").arg(rate));
     pro.start();
     pro.waitForFinished(8000);
-    qDebug() << "#Change Screen Reflash Rate:" << rate << (rate == getScreenReflashRate());
+    */
+    DEVMODE lpDevMode;
+    memset(&lpDevMode, 0, sizeof(DEVMODE));
+    lpDevMode.dmSize = sizeof(DEVMODE);
+    lpDevMode.dmDisplayFrequency = rate;
+    lpDevMode.dmFields = DM_DISPLAYFREQUENCY;
+    LONG ret = ChangeDisplaySettings(&lpDevMode, 0);
+    qDebug() << "#Change Screen Reflash Rate(API):" << rate << (ret == DISP_CHANGE_SUCCESSFUL);
 }
 
-DWORD Win::getScreenReflashRate()
+DWORD Win::getCurrentScreenReflashRate()
 {
     DEVMODE lpDevMode;
     memset(&lpDevMode, 0, sizeof(DEVMODE));
     lpDevMode.dmSize = sizeof(DEVMODE);
     lpDevMode.dmDriverExtra = 0;
-
     EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &lpDevMode);
     return lpDevMode.dmDisplayFrequency;
+}
+
+QSet<DWORD> Win::getAvailableScreenReflashRates()
+{
+    DEVMODE lpDevMode;
+    memset(&lpDevMode, 0, sizeof(DEVMODE));
+    lpDevMode.dmSize = sizeof(DEVMODE);
+    lpDevMode.dmDriverExtra = 0;
+    int iModeNum = 0;
+    QSet<DWORD> list;
+    while (EnumDisplaySettings(NULL, iModeNum++, &lpDevMode)) //about 98 modes(not only 2 reflash rates)
+        list << lpDevMode.dmDisplayFrequency;
+    return list;
 }

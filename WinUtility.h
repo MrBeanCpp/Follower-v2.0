@@ -38,7 +38,8 @@ public:
     static QString activeAudioOutputDevice(void);
     static void setActiveAudioOutputDevice(const QString& name);
     static void setScreenReflashRate(int rate);
-    static DWORD getScreenReflashRate(void);
+    static DWORD getCurrentScreenReflashRate(void);
+    static QSet<DWORD> getAvailableScreenReflashRates(void);
 };
 
 #endif // WIN_H
