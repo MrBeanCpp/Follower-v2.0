@@ -486,6 +486,7 @@ void Widget::Init_SystemTray()
         powerDia->setAttribute(Qt::WA_DeleteOnClose, true);
         connect(powerDia, &PowerSettingDia::powerSettingApply, this, [=](ScreenSetting screenSetting) {
             this->screenSetting = screenSetting;
+            emit powerSwitched(Win::isPowerOn(), true); //直接更新
             sys->sysTray->showMessage("PowerTip", "Power Setting has been updated");
         });
         powerDia->show();

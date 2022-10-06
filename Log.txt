@@ -719,3 +719,8 @@
     用Windows API：ChangeDisplaySettings代替QRes，减少对第三方的依赖，且加快运行速度
     使用struct：ScreenSetting封装on/off reflash brightness等信息，防止杂乱
     ChangeDisplaySettings更改刷新率时，使用CDS_UPDATEREGISTRY，将信息保存于注册表，否则将可能导致Apex将读取注册表值，改回60hz
+
+10-6：
+    在改变PowerSetting后执行emit powerSwitched应用更改
+    更新了brightness UI：QSpinBox -> QSlider
+    更新了reflash rate UI：QSpinBox -> QComboBox （前置技术：列举所有可用刷新率）
