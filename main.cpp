@@ -7,13 +7,15 @@
 #include <QSharedMemory>
 #include <QTimer>
 #include <QScreen>
+#include "logfilehandler.h"
 void init(void);
 void checkAutoStart(void);
 void checkSingleApp(void);
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     //QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication a(argc, argv);
+    LogFileHandler::startFileLogging();
     SystemAPI sysAPI; //用以初始化sys全局指针,like qApp
     init();
     Widget w;

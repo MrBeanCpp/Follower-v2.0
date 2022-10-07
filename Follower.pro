@@ -34,6 +34,7 @@ SOURCES += \
     hook.cpp \
     inputmethod.cpp \
     keystate.cpp \
+    logfilehandler.cpp \
     main.cpp \
     path.cpp \
     powersettingdia.cpp \
@@ -59,6 +60,7 @@ HEADERS += \
     hook.h \
     inputmethod.h \
     keystate.h \
+    logfilehandler.h \
     path.h \
     powersettingdia.h \
     request.h \

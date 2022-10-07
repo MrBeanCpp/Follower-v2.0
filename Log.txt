@@ -724,3 +724,7 @@
     在改变PowerSetting后执行emit powerSwitched应用更改
     更新了brightness UI：QSpinBox -> QSlider
     更新了reflash rate UI：QSpinBox -> QComboBox （前置技术：列举所有可用刷新率）
+
+10-7：
+    新增文件日志系统，重定向qDebug并保留控制台输出，以便debug
+    #bug：从休眠恢复后调整刷新率有时失效，观测log以便后需修复

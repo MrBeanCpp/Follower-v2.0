@@ -138,8 +138,6 @@ Widget::Widget(QWidget* parent)
         hasPower = isPowerOn;
     });
     emit powerSwitched(Win::isPowerOn(), true); //开机调整
-
-    qDebug() << Win::getAvailableScreenReflashRates();
 }
 
 Widget::~Widget()
@@ -351,6 +349,7 @@ void Widget::teleport()
     move(centerToLT(winPos.toPoint()));
     catchFocus();
     setAlwaysTop(); //置顶
+    qDebug() << "#teleport";
 }
 
 void Widget::setTeleportMode(Widget::TeleportMode mode)
@@ -509,7 +508,7 @@ void Widget::setAlwaysTop(bool bTop)
         SetWindowPos(Hwnd, bTop ? HWND_TOPMOST : HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW | SWP_NOACTIVATE); //持续置顶
     //SWP_NOACTIVATE 不激活窗口。如果未设置标志，则窗口被激活, 抢占本进程（其他进程不影响）其他窗口（即使是HWND_BOTTOM）
     //导致在本进程其他窗口上teleport后，该窗口获得焦点后会被迅速抢占(setAlwaysTop(false))
-    qDebug() << "setTop:" << bTop;
+    //qDebug() << "setTop:" << bTop;
 }
 
 void Widget::switchAudioOutputDevice(const QString& name, bool toPre) //封装的作用是储存变量
