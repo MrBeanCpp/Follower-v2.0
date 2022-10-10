@@ -82,3 +82,7 @@
 ## 注
 
 Https下载 需要openssl的支持（自行下载dll）
+
+需要使用`MSVC`编译器（与`Windows`相性好）
+
+参见：[一对airpods引发的程序员脑细胞大死亡事件 - MrBeanC-Blog](https://mrbeancpp.github.io/2022/10/10/%E4%B8%80%E5%AF%B9airpods%E5%BC%95%E5%8F%91%E7%9A%84%E7%A8%8B%E5%BA%8F%E5%91%98%E8%84%91%E7%BB%86%E8%83%9E%E5%A4%A7%E6%AD%BB%E4%BA%A1%E4%BA%8B%E4%BB%B6/)
