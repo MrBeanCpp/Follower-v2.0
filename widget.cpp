@@ -117,7 +117,7 @@ Widget::Widget(QWidget* parent)
     timer_audioTip = new QTimer(this);
     timer_audioTip->setSingleShot(true);
     timer_audioTip->callOnTimeout([=]() {
-        QToolTip::showText(QCursor::pos(), QString("Audio >> %1").arg(Win::activeAudioOutputDevice()), this, QRect(), 60000);
+        QToolTip::showText(QCursor::pos(), QString("Audio >> %1").arg(Win::defaultAudioOutputDevice().name), this, QRect(), 60000);
     });
 
     hPowerNotify = RegisterSuspendResumeNotification(Hwnd, DEVICE_NOTIFY_WINDOW_HANDLE); //注册睡眠/休眠消息
@@ -299,7 +299,7 @@ void Widget::setState(Widget::State toState, int step)
     //update();
 
     if (toState == STILL)
-        audioOuptputDev = Win::activeAudioOutputDevice(); //update
+        audioOuptputDev = Win::defaultAudioOutputDevice(); //update
 
     if (_state == INPUT) {
         lineEdit->silent();
@@ -428,17 +428,20 @@ void Widget::Init_SystemTray()
 
     QActionGroup* audioGroup = new QActionGroup(menu_audio);
     connect(menu_audio, &QMenu::triggered, this, [=](QAction* action) { //切换设备
-        switchAudioOutputDevice(action->text());
+        switchAudioOutputDevice(AudioDevice(action->data().toString(), action->text()));
     });
     connect(menu_audio, &QMenu::aboutToShow, this, [=]() { //更新音频设备列表
         menu_audio->clear();
         //未清空actionGroup でも大丈夫かなあ
-        QStringList audioDevs {Win::validAudioOutputDevices()};
+        QList<AudioDevice> audioDevs {Win::enumAudioOutputDevice()};
         if (audioDevs.empty()) return;
-        QString curDev = audioDevs.at(0);
-        std::sort(audioDevs.begin(), audioDevs.end()); //维持列表顺序恒定
-        for (const auto& dev : qAsConst(audioDevs)) {
-            QAction* act = menu_audio->addAction(dev);
+        AudioDevice curDev = Win::defaultAudioOutputDevice();
+        std::sort(audioDevs.begin(), audioDevs.end(), [](const AudioDevice& lhs, const AudioDevice& rhs) {
+            return lhs.name < rhs.name;
+        }); //维持列表顺序恒定
+        for (const AudioDevice& dev : qAsConst(audioDevs)) {
+            QAction* act = menu_audio->addAction(dev.name);
+            act->setData(dev.id);
             act->setActionGroup(audioGroup);
             act->setCheckable(true);
             if (dev == curDev)
@@ -511,26 +514,27 @@ void Widget::setAlwaysTop(bool bTop)
     //qDebug() << "setTop:" << bTop;
 }
 
-void Widget::switchAudioOutputDevice(const QString& name, bool toPre) //封装的作用是储存变量
+void Widget::switchAudioOutputDevice(const AudioDevice& dev, bool toPre) //封装的作用是储存变量
 {
-    static QString lastDev;
-    QStringList devs = Win::validAudioOutputDevices();
-    QString curDev = Win::activeAudioOutputDevice();
-    QString toDev;
+    static AudioDevice lastDev;
+    QList<AudioDevice> devs = Win::enumAudioOutputDevice();
+    AudioDevice curDev = Win::defaultAudioOutputDevice();
+    AudioDevice toDev;
     if (toPre) {
         if (devs.size() <= 1) return; //少于2个设备
-        if (lastDev.isEmpty() || lastDev == curDev || !devs.contains(lastDev)) lastDev = devs[1];
-        //第一次（无last）or last == cur（可能由于插拔设备 or 程序外修改） or 上个设备不存在
+        if (lastDev.isNull() || lastDev == curDev || !devs.contains(lastDev)) {
+            lastDev = (devs[0] == curDev ? devs[1] : devs[0]);
+        } //第一次（无last）or last == cur（可能由于插拔设备 or 程序外修改） or 上个设备不存在
         toDev = lastDev;
         lastDev = curDev;
     } else {
-        if (curDev == name || !devs.contains(name)) return; //ensure exist
+        if (curDev == dev || !devs.contains(dev)) return; //ensure exist
         lastDev = curDev;
-        toDev = name;
+        toDev = dev;
     }
-    Win::setActiveAudioOutputDevice(toDev);
+    Win::setDefaultAudioOutputDevice(toDev.id);
     audioOuptputDev = toDev; //update
-    sys->sysTray->showMessage("Audio Tip", QString("Audio Output Device Changed: %1\nPress [TAB] on STILL to back").arg(toDev));
+    sys->sysTray->showMessage("Audio Tip", QString("Audio Output Device Changed:\n%1\nPress [TAB] on STILL to back").arg(toDev.name));
 }
 
 void Widget::minimize()
@@ -554,9 +558,9 @@ void Widget::paintEvent(QPaintEvent* event)
         painter.drawText(QRect(rect.left(), rect.top() + DPI(8), rect.right(), rect.bottom()), Qt::AlignCenter, "Need?");
 
         QString dev;
-        if (audioOuptputDev.contains("扬声器") || audioOuptputDev.contains("Speakers", Qt::CaseInsensitive))
+        if (audioOuptputDev.name.contains("扬声器") || audioOuptputDev.name.contains("Speakers", Qt::CaseInsensitive))
             dev = ""; //🔔🔊 //咳咳 学习QQ，免提就什么都不显示，节省一个图标，更清爽
-        else if (audioOuptputDev.contains("耳机") || audioOuptputDev.contains("Headphones", Qt::CaseInsensitive))
+        else if (audioOuptputDev.name.contains("耳机") || audioOuptputDev.name.contains("Headphones", Qt::CaseInsensitive))
             dev = "🎧";
         else
             dev = "🎚️"; //by Darli: 如果时无法识别的类型（或者自定义名称） 则balabala
@@ -623,7 +627,7 @@ void Widget::mouseReleaseEvent(QMouseEvent* event)
     else if (isState(STILL)){
          auto button = event->button();
         if (button == Qt::MidButton)
-            switchAudioOutputDevice(QString(), true);
+            switchAudioOutputDevice(AudioDevice(), true);
         else if (button == Qt::ForwardButton)
             Win::adjustBrightness(true); //+
         else if (button == Qt::BackButton)
@@ -666,7 +670,7 @@ bool Widget::nativeEvent(const QByteArray& eventType, void* message, long* resul
             sys->sysTray->showMessage("Power Tip", "#Resume from sleep | hibernate");
             timer_move->start(); //防止休眠后 timer_move 无响应
             emit powerSwitched(Win::isPowerOn(), true); //休眠恢复中 setReflashRate可能失败 所以恢复后 再次执行
-        }else  if (msg->wParam == PBT_APMPOWERSTATUSCHANGE){ //检 测通断电 or 电量变化 具体需要手动检测
+        }else if(msg->wParam == PBT_APMPOWERSTATUSCHANGE){//检测通断电 or 电量变化 具体需要手动检测
             qDebug() << "#PowerStatusChanged";
             emit powerSwitched(Win::isPowerOn());
         }
@@ -704,7 +708,7 @@ void Widget::keyReleaseEvent(QKeyEvent* event)
         if (key == Qt::Key_Tab) {
             if (timer_audioTip->isActive()) { //短按TAB切换音频输出设备(≈110ms)
                 timer_audioTip->stop();
-                switchAudioOutputDevice(QString(), true);
+                switchAudioOutputDevice(AudioDevice(), true);
                 /*巨复杂写法
                  * 手动记录records  需要List而非单变量的原因是切换Menu->Action时无法获取上一个Action（所以需要>三个变量）
                  * 其实可以用过Win::activeAudioOutputDevice获取

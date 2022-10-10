@@ -4,7 +4,27 @@
 #include <QString>
 #include <windows.h>
 #include <QRect>
-#include <QAudioDeviceInfo>
+//#include <QAudioDeviceInfo>
+#include <QDebug>
+struct AudioDevice {
+    AudioDevice() = default;
+    AudioDevice(const QString& id)
+        : id(id), name("")
+    {
+    }
+    AudioDevice(const QString& id, const QString& name)
+        : id(id), name(name)
+    {
+    }
+    bool isNull(void){
+        return id.isEmpty();
+    }
+    QString id;
+    QString name;
+};
+QDebug operator<<(QDebug dbg, const AudioDevice& dev);
+bool operator==(const AudioDevice& lhs, const AudioDevice& rhs);
+
 class Win //Windows API
 {
 public:
@@ -34,9 +54,9 @@ public:
     static void setBrightness(int brightness);
     static WORD registerHotKey(HWND hwnd, UINT modifiers, UINT key, QString str, ATOM* atom);
     static bool unregisterHotKey(ATOM atom, WORD hotKeyId, HWND hwnd);
-    static QStringList validAudioOutputDevices(void);
-    static QString activeAudioOutputDevice(void);
-    static void setActiveAudioOutputDevice(const QString& name);
+    static bool setDefaultAudioOutputDevice(QString devID);
+    static QList<AudioDevice> enumAudioOutputDevice(void);
+    static AudioDevice defaultAudioOutputDevice(void);
     static void setScreenReflashRate(int rate);
     static DWORD getCurrentScreenReflashRate(void);
     static QSet<DWORD> getAvailableScreenReflashRates(void);

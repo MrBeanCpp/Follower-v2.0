@@ -3,7 +3,7 @@ QT       += qml
 QT       += winextras
 QT       += concurrent
 QT       += network
-QT       += multimedia
+#QT       += multimedia
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
@@ -46,6 +46,7 @@ SOURCES += \
     widget.cpp
 
 HEADERS += \
+    PolicyConfig.h \
     TableEditor/cmdeditor.h \
     TableEditor/inputmethodeditor.h \
     TableEditor/noteeditor.h \
@@ -93,4 +94,10 @@ RC_FILE += icon.rc
 RESOURCES += \
     Res.qrc
 
-LIBS += -lpsapi
+LIBS += -lpsapi -luser32 -lWinmm -lole32
+
+
+msvc {
+    QMAKE_CFLAGS += /utf-8
+    QMAKE_CXXFLAGS += /utf-8
+}

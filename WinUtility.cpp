@@ -1,5 +1,4 @@
 #include "WinUtility.h"
-#include <QDebug>
 #include <QMessageBox>
 #include <cstring>
 #include <psapi.h>
@@ -8,6 +7,21 @@
 #include <QSettings>
 #include <QDir>
 #include <QProcess>
+#include "Mmdeviceapi.h"
+#include "PolicyConfig.h"
+#include "Propidl.h"
+#include "Functiondiscoverykeys_devpkey.h"
+
+QDebug operator<<(QDebug dbg, const AudioDevice& dev)
+{
+    dbg << dev.id << " " << dev.name;
+    return dbg;
+}
+bool operator==(const AudioDevice& lhs, const AudioDevice& rhs)
+{
+    return lhs.id == rhs.id;
+}
+
 void Win::setAlwaysTop(HWND hwnd, bool isTop)
 {
     SetWindowPos(hwnd, isTop ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW); //持续置顶
@@ -237,32 +251,101 @@ bool Win::unregisterHotKey(ATOM atom, WORD hotKeyId, HWND hwnd)
     return ret;
 }
 
-QStringList Win::validAudioOutputDevices() //第一个元素就是当前设备
+bool Win::setDefaultAudioOutputDevice(QString devID)
 {
-    QStringList devList;
-    QList<QAudioDeviceInfo> audioDeviceList = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
-    for (const auto& dev : qAsConst(audioDeviceList)) {
-        const QString& name = dev.deviceName();
-        int index = name.lastIndexOf(" ("); //"耳机 (Realtek(R) Audio)"->"耳机"
-        devList << (index == -1 ? name : name.left(index));
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr)) return false;
+    IPolicyConfigVista* pPolicyConfig;
+    ERole reserved = eConsole;
+
+    hr = CoCreateInstance(__uuidof(CPolicyConfigVistaClient), NULL, CLSCTX_ALL, __uuidof(IPolicyConfigVista), (LPVOID*)&pPolicyConfig);
+    if (SUCCEEDED(hr)) {
+        hr = pPolicyConfig->SetDefaultEndpoint(devID.toStdWString().c_str(), reserved);
+        pPolicyConfig->Release();
     }
-    return devList;
+    ::CoUninitialize();
+    return SUCCEEDED(hr);
 }
 
-QString Win::activeAudioOutputDevice()
+QList<AudioDevice> Win::enumAudioOutputDevice()
 {
-    QStringList devs {validAudioOutputDevices()};
-    return devs.empty() ? QString() : devs.at(0);
+    QList<AudioDevice> res;
+    HRESULT hr = CoInitialize(NULL);
+    if (FAILED(hr)) return res;
+    IMMDeviceEnumerator* pEnum = NULL;
+    // Create a multimedia device enumerator.
+    hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_ALL, __uuidof(IMMDeviceEnumerator), (void**)&pEnum);
+    if (FAILED(hr)) return res;
+    IMMDeviceCollection* pDevices;
+    // Enumerate the output devices.
+    hr = pEnum->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &pDevices); //eRender == out; eCapture == in
+    if (FAILED(hr)) return res;
+    UINT count;
+    hr = pDevices->GetCount(&count);
+    if (FAILED(hr)) return res;
+    for (UINT i = 0; i < count; i++) {
+        IMMDevice* pDevice;
+        hr = pDevices->Item(i, &pDevice);
+        if (SUCCEEDED(hr)) {
+            LPWSTR wstrID = NULL;
+            hr = pDevice->GetId(&wstrID);
+            if (SUCCEEDED(hr)) {
+                IPropertyStore* pStore;
+                hr = pDevice->OpenPropertyStore(STGM_READ, &pStore);
+                if (SUCCEEDED(hr)) {
+                    PROPVARIANT friendlyName;
+                    PropVariantInit(&friendlyName);
+                    hr = pStore->GetValue(PKEY_Device_FriendlyName, &friendlyName);
+                    if (SUCCEEDED(hr)) {
+                        res << AudioDevice(QString::fromWCharArray(wstrID), QString::fromWCharArray(friendlyName.pwszVal));
+                        PropVariantClear(&friendlyName);
+                    }
+                    pStore->Release();
+                }
+            }
+            pDevice->Release();
+        }
+    }
+    pDevices->Release();
+    pEnum->Release();
+    ::CoUninitialize();
+    return res;
 }
 
-void Win::setActiveAudioOutputDevice(const QString& name)
+AudioDevice Win::defaultAudioOutputDevice()
 {
-    QProcess pro;
-    pro.setProgram("nircmd");
-    pro.setArguments(QStringList() << "setdefaultsounddevice" << name);
-    pro.start();
-    pro.waitForFinished(2000);
-    qDebug() << "#Changed Audio Output Device:" << name;
+    AudioDevice res;
+    HRESULT hr = CoInitialize(NULL);
+    if (FAILED(hr)) return res;
+    IMMDeviceEnumerator* pEnum = NULL;
+    // Create a multimedia device enumerator.
+    hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_ALL, __uuidof(IMMDeviceEnumerator), (void**)&pEnum);
+    if (FAILED(hr)) return res;
+    // Enumerate the output devices.
+    IMMDevice* pDevice;
+    hr = pEnum->GetDefaultAudioEndpoint(eRender, eConsole, &pDevice); //eRender == out; eCapture == in
+    if (FAILED(hr)) return res;
+    LPWSTR wstrID = NULL;
+    hr = pDevice->GetId(&wstrID);
+    if (SUCCEEDED(hr)) {
+        IPropertyStore* pStore;
+        hr = pDevice->OpenPropertyStore(STGM_READ, &pStore);
+        if (SUCCEEDED(hr)) {
+            PROPVARIANT friendlyName;
+            PropVariantInit(&friendlyName);
+            hr = pStore->GetValue(PKEY_Device_FriendlyName, &friendlyName);
+            if (SUCCEEDED(hr)) {
+                res.id = QString::fromWCharArray(wstrID);
+                res.name = QString::fromWCharArray(friendlyName.pwszVal);
+                PropVariantClear(&friendlyName);
+            }
+            pStore->Release();
+        }
+    }
+    pDevice->Release();
+    pEnum->Release();
+    ::CoUninitialize();
+    return res;
 }
 
 void Win::setScreenReflashRate(int rate)
@@ -283,7 +366,7 @@ void Win::setScreenReflashRate(int rate)
     lpDevMode.dmDisplayFrequency = rate;
     lpDevMode.dmFields = DM_DISPLAYFREQUENCY;
     LONG ret = ChangeDisplaySettings(&lpDevMode, CDS_UPDATEREGISTRY); //&保存于注册表 如果使用0，会导致Apex时有可能重置回60HZ（注册表
-    qDebug() << "#Change Screen Reflash Rate(API):" << rate << (ret == DISP_CHANGE_SUCCESSFUL);
+    qDebug() << "#Change Screen Reflash Rate(API):" << rate << (ret == DISP_CHANGE_SUCCESSFUL) << ret;
 }
 
 DWORD Win::getCurrentScreenReflashRate()

@@ -73,7 +73,8 @@ private:
     QTimer* timer_audioTip = nullptr;
     HPOWERNOTIFY hPowerNotify = NULL; //睡眠休眠通知注册句柄
     bool isHideAfterExecute = true;
-    QString audioOuptputDev = Win::activeAudioOutputDevice(); //缓存 避免paintEvent频繁获取 //首次获取会卡顿可能是载入dll 所以放这儿
+    //QString audioOuptputDev = Win::activeAudioOutputDevice(); //缓存 避免paintEvent频繁获取 //首次获取会卡顿可能是载入dll 所以放这儿
+    AudioDevice audioOuptputDev = Win::defaultAudioOutputDevice();
 
     ScreenSetting screenSetting;
 
@@ -95,11 +96,11 @@ private:
     inline void teleport(void); //瞬移
     inline void setTeleportMode(TeleportMode mode);
     QSize StateSize(State _state);
-    void writeIni(const QString &key, const QVariant &value);
+    void writeIni(const QString& key, const QVariant& value);
     void readIni(void);
     void Init_SystemTray(void);
     void setAlwaysTop(bool bTop = true);
-    void switchAudioOutputDevice(const QString& name, bool toPre = false);
+    void switchAudioOutputDevice(const AudioDevice& dev, bool toPre = false);
     void minimize(void);
 
 signals:

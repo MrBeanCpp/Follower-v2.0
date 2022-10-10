@@ -728,3 +728,10 @@
 10-7：
     新增文件日志系统，重定向qDebug并保留控制台输出，以便debug
     #bug：从休眠恢复后调整刷新率有时失效，观测log以便后需修复
+
+10-10：
+    ##切换编译器 MinGW -> MSVC，对Windows大量第三方dll亲和性更好且COM组件必须要MSVC才能编译
+    使用Windows原生API替代QAudioDeviceInfo获取音频输出设备（GUID + fullname）
+    使用Windows原生API替代nircmd切换音频输出设备，使用GUID，而非name，更精准
+        如：耳机 (AirPods)，nircmd切换时只用到"耳机"，在重名时无能为力
+        而Windows API使用GUID唯一标识，不在乎name，且相较于开启外部进程，效率更高
