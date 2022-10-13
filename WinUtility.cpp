@@ -348,10 +348,10 @@ AudioDevice Win::defaultAudioOutputDevice()
     return res;
 }
 
-void Win::setScreenReflashRate(int rate)
+bool Win::setScreenReflashRate(int rate)
 {
-    if (rate < 0) return;
-    if (rate == (int)getCurrentScreenReflashRate()) return;
+    if (rate < 0) return false;
+    if (rate == (int)getCurrentScreenReflashRate()) return true;
 
     /*QRes
     QProcess pro;
@@ -367,6 +367,7 @@ void Win::setScreenReflashRate(int rate)
     lpDevMode.dmFields = DM_DISPLAYFREQUENCY;
     LONG ret = ChangeDisplaySettings(&lpDevMode, CDS_UPDATEREGISTRY); //&保存于注册表 如果使用0，会导致Apex时有可能重置回60HZ（注册表
     qDebug() << "#Change Screen Reflash Rate(API):" << rate << (ret == DISP_CHANGE_SUCCESSFUL) << ret;
+    return (ret == DISP_CHANGE_SUCCESSFUL);
 }
 
 DWORD Win::getCurrentScreenReflashRate()

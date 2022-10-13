@@ -735,3 +735,17 @@
     使用Windows原生API替代nircmd切换音频输出设备，使用GUID，而非name，更精准
         如：耳机 (AirPods)，nircmd切换时只用到"耳机"，在重名时无能为力
         而Windows API使用GUID唯一标识，不在乎name，且相较于开启外部进程，效率更高
+
+10-12：
+    关于9-30的问题：从休眠中恢复时 调整刷新率无效，原因在于屏幕还没恢复，PBT_APMRESUMEAUTOMATIC和PBT_APMPOWERSTATUSCHANGE顺序不固定
+    故采用PBT_APMRESUMESUSPEND（在user活动后发出），尽量延迟触发时间，提高调整刷新率成功率
+    (实验证明：PBT_APMRESUMESUSPEND可能先于PBT_APMRESUMEAUTOMATIC发出，怪)
+
+10-13：
+    关于10-12上述方案，被验证为无效，PBT_APMRESUMESUSPEND | PBT_APMRESUMEAUTOMATIC 可能先于Power消息发出（且概率性更改刷新率失败）
+    导致PowerChange时isPowerOn状态已更改，导致无法继续更改刷新率
+    由于无法获知何时才能更改刷新率成功（猜测为亮屏后，但无法获得亮屏消息（目前）），故改变方案
+    1.延时：但不可靠 & 捞
+    2.建立重试机制 after PBT_APMRESUMEAUTOMATIC
+
+    PS：有时通断电改变刷新率没有debug消息，考虑MSI Center擅自更改(基础设置-屏幕省电模式)

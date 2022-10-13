@@ -124,16 +124,24 @@ Widget::Widget(QWidget* parent)
 
     connect(this, &Widget::powerSwitched, this, [=](bool isPowerOn, bool force) {
         qDebug() << "#Power:" << isPowerOn;
+
+        //必须要std::function（而非auto）表明类型才能递归调用，否则无法推导
+        //悲，std::function无法实现默认参数
+        static std::function<void(int,bool,int)> setScreenReflashRate = [this](int rate, bool retry = false, int gap = 1000){
+            if(rate < 0) return; //-1 == unused 注意这条 否则就死循环啦aaaaaa aaaaaaa 小心点
+            bool ret = Win::setScreenReflashRate(rate);
+            if(!ret && retry)
+                QTimer::singleShot(gap, this, [=](){
+                    qDebug() << "#retrying set Reflash Rate" << rate;
+                    sys->sysTray->showMessage("Reflash Rate", "Retrying to set Refalsh Rate");
+                    setScreenReflashRate(rate, retry, gap);
+                });
+        };
+
         if (force || hasPower != isPowerOn) {
-            if (isPowerOn) {
-                sys->sysTray->showMessage("Little Tip", "Power Up");
-                Win::setScreenReflashRate(screenSetting.reflash[1]); //休眠恢复中可能更改不生效
-                Win::setBrightness(screenSetting.brightness[1]);
-            } else {
-                sys->sysTray->showMessage("Little Tip", "Power Down");
-                Win::setScreenReflashRate(screenSetting.reflash[0]);
-                Win::setBrightness(screenSetting.brightness[0]);
-            }
+            sys->sysTray->showMessage("Little Tip", isPowerOn ? "Power Up" : "Power Down");
+            setScreenReflashRate(screenSetting.reflash[isPowerOn], force, 1000); //休眠恢复中可能更改不生效 故建立重试机制
+            Win::setBrightness(screenSetting.brightness[isPowerOn]);
         }
         hasPower = isPowerOn;
     });
@@ -670,7 +678,7 @@ bool Widget::nativeEvent(const QByteArray& eventType, void* message, long* resul
             sys->sysTray->showMessage("Power Tip", "#Resume from sleep | hibernate");
             timer_move->start(); //防止休眠后 timer_move 无响应
             emit powerSwitched(Win::isPowerOn(), true); //休眠恢复中 setReflashRate可能失败 所以恢复后 再次执行
-        }else if(msg->wParam == PBT_APMPOWERSTATUSCHANGE){//检测通断电 or 电量变化 具体需要手动检测
+        }else if(msg->wParam == PBT_APMPOWERSTATUSCHANGE){ //检测通断电 or 电量变化 具体需要手动检测
             qDebug() << "#PowerStatusChanged";
             emit powerSwitched(Win::isPowerOn());
         }

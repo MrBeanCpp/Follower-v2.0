@@ -57,7 +57,7 @@ public:
     static bool setDefaultAudioOutputDevice(QString devID);
     static QList<AudioDevice> enumAudioOutputDevice(void);
     static AudioDevice defaultAudioOutputDevice(void);
-    static void setScreenReflashRate(int rate);
+    static bool setScreenReflashRate(int rate);
     static DWORD getCurrentScreenReflashRate(void);
     static QSet<DWORD> getAvailableScreenReflashRates(void);
 };
