@@ -2,15 +2,15 @@
 #define WIDGET_H
 
 #include "codeeditor.h"
-#include "path.h"
+#include "Utils/path.h"
 #include <QLineEdit>
 #include <QTime>
 #include <QTimeLine>
 #include <QWidget>
-#include <systemapi.h>
+#include "Utils/systemapi.h"
 #include <windows.h>
-#include "timeclipboard.h"
-#include "WinUtility.h"
+#include "Utils/timeclipboard.h"
+#include "Utils/WinUtility.h"
 #include "powersettingdia.h"
 QT_BEGIN_NAMESPACE
 namespace Ui {

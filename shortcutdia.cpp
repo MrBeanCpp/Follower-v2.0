@@ -2,10 +2,10 @@
 #include "ui_shortcutdia.h" // 移植时没有这个文件，重新构建项目即可自动生成
 #include <QDebug>
 #include <QKeyEvent>
-#include <path.h>
+#include "Utils/path.h"
 #include <QSettings>
 #include <QTimer>
-#include <systemapi.h>
+#include "Utils/systemapi.h"
 #include <QMetaEnum>
 ShortcutDia::ShortcutDia(QWidget* parent)
     : QDialog(parent), ui(new Ui::ShortcutDia)

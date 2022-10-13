@@ -1,7 +1,7 @@
 #ifndef NOTEEDITOR_H
 #define NOTEEDITOR_H
 
-#include "systemapi.h"
+#include "Utils/systemapi.h"
 #include "tableeditor.h"
 #include <QComboBox>
 #include <QDateTimeEdit>

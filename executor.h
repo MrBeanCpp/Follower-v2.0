@@ -3,9 +3,9 @@
 #include "TableEditor/cmdeditor.h"
 #include "TableEditor/inputmethodeditor.h"
 #include "TableEditor/noteeditor.h"
-#include "hook.h"
-#include "path.h"
-#include "systemapi.h"
+#include "Utils/hook.h"
+#include "Utils/path.h"
+#include "Utils/systemapi.h"
 #include <QApplication>
 #include <QDebug>
 #include <QDir>

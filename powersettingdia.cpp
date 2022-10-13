@@ -1,10 +1,10 @@
 #include "powersettingdia.h"
 #include "ui_powersettingdia.h"
-#include "systemapi.h"
+#include "Utils/systemapi.h"
 #include <QSettings>
-#include "path.h"
+#include "Utils/path.h"
 #include <QToolTip>
-#include "WinUtility.h"
+#include "Utils/WinUtility.h"
 #include <QSet>
 PowerSettingDia::PowerSettingDia(const ScreenSetting &screenSetting, QWidget *parent)
     : QDialog(parent),

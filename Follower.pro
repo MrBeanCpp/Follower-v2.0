@@ -25,49 +25,49 @@ SOURCES += \
     TableEditor/noteeditor.cpp \
     TableEditor/tablebase.cpp \
     TableEditor/tableeditor.cpp \
-    WinUtility.cpp \
-    cacheiconprovider.cpp \
+    Utils/WinUtility.cpp \
+    Utils/cacheiconprovider.cpp \
+    Utils/gaptimer.cpp \
+    Utils/hook.cpp \
+    Utils/inputmethod.cpp \
+    Utils/keystate.cpp \
+    Utils/logfilehandler.cpp \
+    Utils/path.cpp \
+    Utils/request.cpp \
+    Utils/systemapi.cpp \
+    Utils/timeclipboard.cpp \
     cmdlistwidget.cpp \
     codeeditor.cpp \
     executor.cpp \
-    gaptimer.cpp \
-    hook.cpp \
-    inputmethod.cpp \
-    keystate.cpp \
-    logfilehandler.cpp \
     main.cpp \
-    path.cpp \
     powersettingdia.cpp \
-    request.cpp \
     shortcutdia.cpp \
-    systemapi.cpp \
-    timeclipboard.cpp \
     updateform.cpp \
     widget.cpp
 
 HEADERS += \
-    PolicyConfig.h \
     TableEditor/cmdeditor.h \
     TableEditor/inputmethodeditor.h \
     TableEditor/noteeditor.h \
     TableEditor/tablebase.h \
     TableEditor/tableeditor.h \
-    WinUtility.h \
-    cacheiconprovider.h \
+    Utils/PolicyConfig.h \
+    Utils/WinUtility.h \
+    Utils/cacheiconprovider.h \
+    Utils/gaptimer.h \
+    Utils/hook.h \
+    Utils/inputmethod.h \
+    Utils/keystate.h \
+    Utils/logfilehandler.h \
+    Utils/path.h \
+    Utils/request.h \
+    Utils/systemapi.h \
+    Utils/timeclipboard.h \
     cmdlistwidget.h \
     codeeditor.h \
     executor.h \
-    gaptimer.h \
-    hook.h \
-    inputmethod.h \
-    keystate.h \
-    logfilehandler.h \
-    path.h \
     powersettingdia.h \
-    request.h \
     shortcutdia.h \
-    systemapi.h \
-    timeclipboard.h \
     updateform.h \
     widget.h
 

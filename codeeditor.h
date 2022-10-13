@@ -2,14 +2,14 @@
 #define CODEEDITOR_H
 
 #include "executor.h"
-#include "systemapi.h"
+#include "Utils/systemapi.h"
 #include <QLabel>
 #include <QLineEdit>
 #include <QWidget>
 #include "cmdlistwidget.h"
-#include "cacheiconprovider.h"
+#include "Utils/cacheiconprovider.h"
 #include <QCompleter>
-#include "request.h"
+#include "Utils/request.h"
 struct PastCodeList {
     PastCodeList()
         : lineLimit(10), index(0) {}

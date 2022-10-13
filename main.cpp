@@ -1,4 +1,4 @@
-#include "systemapi.h"
+#include "Utils/systemapi.h"
 #include "widget.h"
 #include <QApplication>
 #include <QDebug>
@@ -7,7 +7,7 @@
 #include <QSharedMemory>
 #include <QTimer>
 #include <QScreen>
-#include "logfilehandler.h"
+#include "Utils/logfilehandler.h"
 void init(void);
 void checkAutoStart(void);
 void checkSingleApp(void);
