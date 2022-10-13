@@ -12,6 +12,7 @@
 #include "Utils/timeclipboard.h"
 #include "Utils/WinUtility.h"
 #include "powersettingdia.h"
+#include "Utils/AudioDevice.h"
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class Widget;
@@ -74,7 +75,7 @@ private:
     HPOWERNOTIFY hPowerNotify = NULL; //睡眠休眠通知注册句柄
     bool isHideAfterExecute = true;
     //QString audioOuptputDev = Win::activeAudioOutputDevice(); //缓存 避免paintEvent频繁获取 //首次获取会卡顿可能是载入dll 所以放这儿
-    AudioDevice audioOuptputDev = Win::defaultAudioOutputDevice();
+    AudioDevice audioOuptputDev = AudioDevice::defaultOutputDevice();
 
     ScreenSetting screenSetting;
 

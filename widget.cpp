@@ -28,6 +28,7 @@ Widget::Widget(QWidget* parent)
     : QWidget(parent), ui(new Ui::Widget)
 {
     ui->setupUi(this);
+    setWindowIcon(QIcon(":/images/ICON.ico")); //若采用.rc文件设置图标 则无需此行，否则App无图标，导致QMessageBox::about找不到图标
     setWindowFlags(Qt::FramelessWindowHint);
     QtWin::taskbarDeleteTab(this); //删除任务栏图标
     setWindowOpacity(0.8);
@@ -117,7 +118,7 @@ Widget::Widget(QWidget* parent)
     timer_audioTip = new QTimer(this);
     timer_audioTip->setSingleShot(true);
     timer_audioTip->callOnTimeout([=]() {
-        QToolTip::showText(QCursor::pos(), QString("Audio >> %1").arg(Win::defaultAudioOutputDevice().name), this, QRect(), 60000);
+        QToolTip::showText(QCursor::pos(), QString("Audio >> %1").arg(AudioDevice::defaultOutputDevice().name), this, QRect(), 60000);
     });
 
     hPowerNotify = RegisterSuspendResumeNotification(Hwnd, DEVICE_NOTIFY_WINDOW_HANDLE); //注册睡眠/休眠消息
@@ -307,7 +308,7 @@ void Widget::setState(Widget::State toState, int step)
     //update();
 
     if (toState == STILL)
-        audioOuptputDev = Win::defaultAudioOutputDevice(); //update
+        audioOuptputDev = AudioDevice::defaultOutputDevice(); //update
 
     if (_state == INPUT) {
         lineEdit->silent();
@@ -441,9 +442,9 @@ void Widget::Init_SystemTray()
     connect(menu_audio, &QMenu::aboutToShow, this, [=]() { //更新音频设备列表
         menu_audio->clear();
         //未清空actionGroup でも大丈夫かなあ
-        QList<AudioDevice> audioDevs {Win::enumAudioOutputDevice()};
+        QList<AudioDevice> audioDevs {AudioDevice::enumOutputDevice()};
         if (audioDevs.empty()) return;
-        AudioDevice curDev = Win::defaultAudioOutputDevice();
+        AudioDevice curDev = AudioDevice::defaultOutputDevice();
         std::sort(audioDevs.begin(), audioDevs.end(), [](const AudioDevice& lhs, const AudioDevice& rhs) {
             return lhs.name < rhs.name;
         }); //维持列表顺序恒定
@@ -525,8 +526,8 @@ void Widget::setAlwaysTop(bool bTop)
 void Widget::switchAudioOutputDevice(const AudioDevice& dev, bool toPre) //封装的作用是储存变量
 {
     static AudioDevice lastDev;
-    QList<AudioDevice> devs = Win::enumAudioOutputDevice();
-    AudioDevice curDev = Win::defaultAudioOutputDevice();
+    QList<AudioDevice> devs = AudioDevice::enumOutputDevice();
+    AudioDevice curDev = AudioDevice::defaultOutputDevice();
     AudioDevice toDev;
     if (toPre) {
         if (devs.size() <= 1) return; //少于2个设备
@@ -540,7 +541,7 @@ void Widget::switchAudioOutputDevice(const AudioDevice& dev, bool toPre) //封�
         lastDev = curDev;
         toDev = dev;
     }
-    Win::setDefaultAudioOutputDevice(toDev.id);
+    AudioDevice::setDefaultOutputDevice(toDev.id);
     audioOuptputDev = toDev; //update
     sys->sysTray->showMessage("Audio Tip", QString("Audio Output Device Changed:\n%1\nPress [TAB] on STILL to back").arg(toDev.name));
 }

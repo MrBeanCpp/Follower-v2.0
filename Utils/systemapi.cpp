@@ -52,7 +52,7 @@ void SystemAPI::Init()
 void SystemAPI::Init_SystemTray()
 {
     if (sysTray != nullptr) return;
-    sysTray = new QSystemTrayIcon(QIcon(":/ICON.ico"), qApp);
+    sysTray = new QSystemTrayIcon(QIcon(":/images/ICON.ico"), qApp);
 }
 
 void SystemAPI::Init_InputMethod()

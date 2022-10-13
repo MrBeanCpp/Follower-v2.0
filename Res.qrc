@@ -1,7 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>tableStyle.qss</file>
-        <file>ICON.ico</file>
         <file>images/web.png</file>
+        <file>images/ICON.ico</file>
     </qresource>
 </RCC>

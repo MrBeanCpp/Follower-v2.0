@@ -25,6 +25,7 @@ SOURCES += \
     TableEditor/noteeditor.cpp \
     TableEditor/tablebase.cpp \
     TableEditor/tableeditor.cpp \
+    Utils/AudioDevice.cpp \
     Utils/WinUtility.cpp \
     Utils/cacheiconprovider.cpp \
     Utils/gaptimer.cpp \
@@ -51,6 +52,7 @@ HEADERS += \
     TableEditor/noteeditor.h \
     TableEditor/tablebase.h \
     TableEditor/tableeditor.h \
+    Utils/AudioDevice.h \
     Utils/PolicyConfig.h \
     Utils/WinUtility.h \
     Utils/cacheiconprovider.h \
@@ -86,10 +88,10 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 DISTFILES += \
     Function-List.txt \
     Log.txt \
-    Need-to-Update.txt \
-    icon.rc
+    Need-to-Update.txt
 
-RC_FILE += icon.rc
+#RC_FILE += icon.rc
+RC_ICONS = images/ICON.ico
 
 RESOURCES += \
     Res.qrc

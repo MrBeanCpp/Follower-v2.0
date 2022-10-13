@@ -749,3 +749,6 @@
     2.建立重试机制 after PBT_APMRESUMEAUTOMATIC
 
     PS：有时通断电改变刷新率没有debug消息，考虑MSI Center擅自更改(基础设置-屏幕省电模式)
+
+    将音频设备相关操作封装为AudioDevice类（from Win类），提高可读性
+    删除.rc文件，采用RC_ICONS = images/ICON.ico方式设置图标，使仓库更简洁
