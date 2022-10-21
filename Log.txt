@@ -752,3 +752,41 @@
 
     将音频设备相关操作封装为AudioDevice类（from Win类），提高可读性
     删除.rc文件，采用RC_ICONS = images/ICON.ico方式设置图标，使仓库更简洁
+
+10-16：
+    关于环形菜单的设计方案：
+        涉及到Windows窗口的一个特性：在一个窗口A内，按住鼠标任意按键，拖动鼠标至窗口B，Press & Move & Release消息都会发送给窗口A
+        导致作为菜单弹出的B无法正常响应鼠标（即便是转移焦点也不行）
+        但是，只要将窗口B（QDialog）替换为QMenu并使用exec or popup函数弹出，就可以完美顶替窗口A夺取鼠标消息控制权
+        我陷入了人生的大思考：究竟是QMenu的Windows平台底层实现有什么猫腻，还是任意一个窗口都可以实现如此效果呢
+        从正常Windows窗口的逻辑来讲，QMenu夺取鼠标消息的逻辑是不适用的，但是我还是想探索如何才能做到以及其原理
+        虽然可以在窗口A向窗口B转发（sendEvent）消息，但是父窗口B的消息并不能传递到子控件上，除非向子控件发消息（过于繁杂）
+        1.1：转发move消息，自绘菜单（级联菜单就很麻烦）
+        1.2：精确制导，手动触发指定控件消息
+        1.3：喂，喂，为什么一定要按住MouseButton，松开再点不行吗，or 换成按键okay？？
+        1.4：子窗体和AttachThreadInput都不行
+        不管怎么说，都不好，所以QMenu怎么实现的www
+        事后：可能是捕获了qApp eventFilter（move）然后自行发出了其他事件
+        不过话说回来，QMenu能用，先用着~，其他的交给以后的我啦~
+        
+        QMenu存在一个问题：一次只能激活一个QMenu，并且其子项只能垂直排列，导致无法实现环形菜单
+        但是QToolButton可以充当第一级菜单，可同时存在多个button，但每次还是只能激活一个QMenu
+
+10-19：
+    加入ToolMenu后 出现了FTH + 莫名crashed，然后莫名好了，推测前一次崩溃留下的文件影响了下一次，（开启debugger后就好了，可能刷新了文件？）
+
+10-20：
+    初步实现ToolMenu
+    Widget & Menu qss转入widget.ui内管理（删除setStyleSheet），后续需要转入qss文件导入qApp
+
+10-21：
+    初步完善ToolMenu：
+        由于QMenu::popup()只能同时激活一个，故弃用
+        改用QToolButton作为一级菜单激活，调用showMenu弹出（注意：该函数类似exec，内部循环阻塞，会造成QTimer停止，close后跳出内部循环）
+        由于按住鼠标按键，ToolMenu窗口接收不到鼠标事件，故用qApp的eventFilter过滤鼠标事件，手动处理
+
+    长按中键 | 短按Shift可以唤出ToolMenu
+    在ToolMenu中复用sysTray中的菜单，实现音频输出设备切换
+    并采用QMap + QTimer::singleshot实现长按
+
+    PS:跳过13版本 因为讨厌13

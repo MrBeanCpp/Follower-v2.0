@@ -14,7 +14,19 @@
    <string>Follower-v2.0</string>
   </property>
   <property name="windowIcon">
-   <iconset theme=":/ICON.ico"/>
+   <iconset theme=":/ICON.ico">
+    <normaloff>.</normaloff>.</iconset>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget#Widget{background-color:rgb(15,15,15);}
+QMenu{
+	background-color:rgb(45,45,45);
+	color:rgb(220,220,220);
+	border:1px solid white;
+}
+QMenu:selected{
+	background-color:rgb(60,60,60);
+}</string>
   </property>
  </widget>
  <resources/>

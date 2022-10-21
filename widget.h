@@ -13,6 +13,7 @@
 #include "Utils/WinUtility.h"
 #include "powersettingdia.h"
 #include "Utils/AudioDevice.h"
+#include "toolmenu.h"
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class Widget;
@@ -50,6 +51,12 @@ private:
         OFF = -1 //总是关闭(NEVER)
     };
 
+    enum LongPressState{
+        Ready,
+        Cancel,
+        Done
+    };
+
     State state;
     TeleportMode teleportMode;
     CodeEditor* lineEdit = nullptr;
@@ -76,8 +83,11 @@ private:
     bool isHideAfterExecute = true;
     //QString audioOuptputDev = Win::activeAudioOutputDevice(); //缓存 避免paintEvent频繁获取 //首次获取会卡顿可能是载入dll 所以放这儿
     AudioDevice audioOuptputDev = AudioDevice::defaultOutputDevice();
-
     ScreenSetting screenSetting;
+
+    ToolMenu* tMenu = nullptr;
+    QMap<Qt::MouseButton, LongPressState> isMBLongPressed;
+    static constexpr int LPDelay = 180; //ms Long Press Dealy
 
 private:
     inline bool moveGuide(QPoint dest, QPointF& pos, qreal speed, qreal limit = 10);
@@ -103,6 +113,7 @@ private:
     void setAlwaysTop(bool bTop = true);
     void switchAudioOutputDevice(const AudioDevice& dev, bool toPre = false);
     void minimize(void);
+    void Init_ToolMenu(void);
 
 signals:
     void powerSwitched(bool isPowerOn, bool force = false);

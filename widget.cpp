@@ -34,7 +34,7 @@ Widget::Widget(QWidget* parent)
     setWindowOpacity(0.8);
     setFocusPolicy(Qt::StrongFocus); //有焦点才能SwitchToThisWindow
     qApp->setQuitOnLastWindowClosed(false);
-    setStyleSheet("QWidget#Widget{background-color:rgb(15,15,15);}");
+    //setStyleSheet("QWidget#Widget{background-color:rgb(15,15,15);}");
     resize(StateSize(MOVE));
 
     winPos = geometry().center();
@@ -146,7 +146,11 @@ Widget::Widget(QWidget* parent)
         }
         hasPower = isPowerOn;
     });
-    emit powerSwitched(Win::isPowerOn(), true); //开机调整
+    QTimer::singleShot(0, this, [=](){ //否则在构造函数内emit会warning（虽然问题不大 但是烦心）
+        emit powerSwitched(Win::isPowerOn(), true); //开机调整
+    });
+
+    Init_ToolMenu();
 }
 
 Widget::~Widget()
@@ -423,8 +427,8 @@ void Widget::readIni() //文件不存在时，读取文件不会创建，写文�
 void Widget::Init_SystemTray()
 {
     QMenu* menu = new QMenu(this);
-    menu->setStyleSheet("QMenu{background-color:rgb(45,45,45);color:rgb(220,220,220);border:1px solid white;}"
-                        "QMenu:selected{background-color:rgb(60,60,60);}");
+//    menu->setStyleSheet("QMenu{background-color:rgb(45,45,45);color:rgb(220,220,220);border:1px solid white;}"
+//                        "QMenu:selected{background-color:rgb(60,60,60);}");
 
     QAction* act_autoStart = new QAction("isAutoStart", menu);
     QAction* act_update = new QAction("Update", menu);
@@ -432,6 +436,7 @@ void Widget::Init_SystemTray()
     QAction* act_shortcut = new QAction("Set HotKey", menu);
     QAction* act_power = new QAction("Power Setting", menu);
     QMenu* menu_audio = new QMenu("Switch AudioDev", menu);
+    menu_audio->setObjectName("menu_audio"); // for find child(tMenu)
     QAction* act_about = new QAction("About [me]?", menu);
     QAction* act_quit = new QAction("Peace Out>>", menu);
 
@@ -552,6 +557,18 @@ void Widget::minimize()
     setState(MOVE);
 }
 
+void Widget::Init_ToolMenu()
+{
+    if(tMenu) return;
+    tMenu = new ToolMenu(this);
+    connect(tMenu, &ToolMenu::closed, this, [=](){timer_move->start();});
+
+    tMenu->addAction("Quit>", DPI(QPoint(0, 35)), [](){
+        qApp->quit();
+    });
+    tMenu->addMenu(sys->sysTray->contextMenu()->findChild<QMenu*>("menu_audio"), DPI(QPoint(100, 0))); //复用代码~
+}
+
 void Widget::paintEvent(QPaintEvent* event)
 {
     QRect rect = event->rect();
@@ -610,9 +627,19 @@ void Widget::resizeEvent(QResizeEvent* event)
 
 void Widget::mousePressEvent(QMouseEvent* event)
 {
-    if (!isState(INPUT) || event->button() != Qt::LeftButton) return;
-    preMousePos = event->screenPos();
-    timer_move->stop(); //防止鼠标滑出，进入MOVE状态
+    auto button = event->button();
+    if(isState(INPUT) && button == Qt::LeftButton){
+        preMousePos = event->screenPos();
+        timer_move->stop(); //防止鼠标滑出，进入MOVE状态
+    }else if(isState(STILL) && button == Qt::MiddleButton){
+        isMBLongPressed[button] = Ready;
+        QTimer::singleShot(LPDelay, this, [=](){
+            if(isMBLongPressed[button] != Ready)return;
+            timer_move->stop();
+            tMenu->show();
+            isMBLongPressed[button] = Done;
+        });
+    }
 }
 
 void Widget::mouseMoveEvent(QMouseEvent* event)
@@ -635,8 +662,10 @@ void Widget::mouseReleaseEvent(QMouseEvent* event)
         lineEdit->setFocus(); //返回焦点
     else if (isState(STILL)){
          auto button = event->button();
-        if (button == Qt::MidButton)
+        if (button == Qt::MidButton && isMBLongPressed[button] == Ready){ //防止Done
+            isMBLongPressed[button] = Cancel;
             switchAudioOutputDevice(AudioDevice(), true);
+        }
         else if (button == Qt::ForwardButton)
             Win::adjustBrightness(true); //+
         else if (button == Qt::BackButton)
@@ -701,7 +730,11 @@ void Widget::keyPressEvent(QKeyEvent* event)
     switch (state) { //采用switch是为了结构清晰
     case STILL:
         if (key == Qt::Key_Tab) //长按 200ms 显示当前设备信息
-            timer_audioTip->start(200);
+            timer_audioTip->start(LPDelay);
+        else if(key == Qt::Key_Shift){
+            timer_move->stop();
+            tMenu->show();
+        }
         break;
     default:
         break;

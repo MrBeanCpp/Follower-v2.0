@@ -43,6 +43,7 @@ SOURCES += \
     main.cpp \
     powersettingdia.cpp \
     shortcutdia.cpp \
+    toolmenu.cpp \
     updateform.cpp \
     widget.cpp
 
@@ -70,6 +71,7 @@ HEADERS += \
     executor.h \
     powersettingdia.h \
     shortcutdia.h \
+    toolmenu.h \
     updateform.h \
     widget.h
 
@@ -77,6 +79,7 @@ FORMS += \
     powersettingdia.ui \
     shortcutdia.ui \
     tablebase.ui \
+    toolmenu.ui \
     updateform.ui \
     widget.ui
 
