@@ -195,6 +195,7 @@ bool Widget::moveWindow(qreal speed)
 void Widget::getInputFocus()
 { //因为2000/XP改变了SetForegroundWindow的执行方式，不允许随便把窗口提前，打扰用户的工作。可以用附加本线程到最前面窗口的线程，从而欺骗windows。
     HWND foreHwnd = GetForegroundWindow();
+    if(foreHwnd == Hwnd) return;
     DWORD foreThreadID = GetWindowThreadProcessId(foreHwnd, NULL);
     DWORD threadID = GetCurrentThreadId();
     AttachThreadInput(threadID, foreThreadID, TRUE);
@@ -273,6 +274,8 @@ void Widget::updateWindow()
             //hide(); //setWindowState(Qt::WindowMinimized);
             minimize();
             break;
+        }else if(KeyState::isPress(VK_SHIFT)){
+            getInputFocus(); //确保无焦点时也能顺利开启ToolMenu
         }
         if (isCursorInWindow()) break;
         isMove = moveWindow();

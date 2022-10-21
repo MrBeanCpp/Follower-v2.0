@@ -790,3 +790,5 @@
     并采用QMap + QTimer::singleshot实现长按
 
     PS:跳过13版本 因为讨厌13
+
+    在全局检测Shift时，getInputFocus(); //确保无焦点时也能顺利开启ToolMenu
