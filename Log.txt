@@ -792,3 +792,6 @@
     PS:跳过13版本 因为讨厌13
 
     在全局检测Shift时，getInputFocus(); //确保无焦点时也能顺利开启ToolMenu
+
+10-23：
+    ToolMenu增加LabelTip，用于说明性文字，可动态更新（函数返回指针）

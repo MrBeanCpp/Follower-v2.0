@@ -566,10 +566,18 @@ void Widget::Init_ToolMenu()
     tMenu = new ToolMenu(this);
     connect(tMenu, &ToolMenu::closed, this, [=](){timer_move->start();});
 
-    tMenu->addAction("Quit>", DPI(QPoint(0, 35)), [](){
+    auto btn_quit = tMenu->addAction("Quit>", DPI(QPoint(0, 35)), [=](){
+        setState(MOVE); //添加离场动画 减少突兀感
         qApp->quit();
     });
-    tMenu->addMenu(sys->sysTray->contextMenu()->findChild<QMenu*>("menu_audio"), DPI(QPoint(100, 0))); //复用代码~
+    tMenu->addLabelTip(btn_quit, "↑⚠️↑", ToolMenu::DOWN, DPI(2));
+
+    auto btn_audio = tMenu->addMenu(sys->sysTray->contextMenu()->findChild<QMenu*>("menu_audio"), DPI(QPoint(100, 0))); //复用代码~
+    auto audio_tip = tMenu->addLabelTip(btn_audio);
+
+    connect(tMenu, &ToolMenu::showed, this, [=](){
+        tMenu->setLabelTip(btn_audio, audio_tip, AudioDevice::defaultOutputDevice().name, ToolMenu::UP, DPI(4));
+    });
 }
 
 void Widget::paintEvent(QPaintEvent* event)
