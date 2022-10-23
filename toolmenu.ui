@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ToolMenu</class>
+ <widget class="QDialog" name="ToolMenu">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>512</width>
+    <height>411</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QToolButton{
+	background-color:rgb(45,45,45);
+	color:rgb(220,220,220);
+	border:1px solid white;
+	font: 9pt &quot;Consolas&quot;;
+	padding: 2px 5px 2px 2px
+}
+/*QToolButton:hover{
+	background-color:rgb(29,84,92);
+}*/
+/*
+QMenu{
+	background-color:rgb(45,45,45);
+	color:rgb(220,220,220);
+	border:1px solid white;
+} 
+QMenu:selected{
+	background-color:rgb(29,84,92);
+}*/
+QLabel{
+	color:white;
+	font: 8pt &quot;Microsoft YaHei UI&quot;;
+	background-color: rgba(53, 53, 53, 150);
+	padding-left: 2px;
+	padding-right: 2px;
+}</string>
+  </property>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
