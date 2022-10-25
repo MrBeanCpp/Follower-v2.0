@@ -219,12 +219,12 @@ void Widget::changeSizeSlow(QSize size, int step, bool isAuto)
     while (W != width || H != height) {
         W = W > width ? qMax(width, W - step) : qMin(width, W + step);
         H = H > height ? qMax(height, H - step) : qMin(height, H + step);
-        resize(W, H);
-        repaint(); //wallpaper GPU占用高会影响paint时间
-        //Sleep(1);//放弃时间片后 os返回的时间不确定 与CPU频率占用率有关 不可靠
         QElapsedTimer t;
         t.start();
-        while (t.nsecsElapsed() < 0.8e6) //1 ms = 1e6 ns
+        resize(W, H); //将resize和repaint计入时间考量，防止paint太慢
+        repaint(); //wallpaper GPU占用高会影响paint时间
+        //Sleep(1);//放弃时间片后 os返回的时间不确定 与CPU频率占用率有关 不可靠
+        while (t.nsecsElapsed() < 1e6) //1 ms = 1e6 ns
             ; //死循环延时 可烤(靠)
         //且不能进入事件循环 否则Follower的移动可能出bug
     }
@@ -551,6 +551,8 @@ void Widget::switchAudioOutputDevice(const AudioDevice& dev, bool toPre) //封�
     }
     AudioDevice::setDefaultOutputDevice(toDev.id);
     audioOuptputDev = toDev; //update
+
+    qDebug() << "Audio Output Device Changed:" << toDev.name;
     sys->sysTray->showMessage("Audio Tip", QString("Audio Output Device Changed:\n%1\nPress [TAB] on STILL to back").arg(toDev.name));
 }
 
