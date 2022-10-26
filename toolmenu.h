@@ -27,6 +27,7 @@ public:
     ~ToolMenu();
 
     QToolButton* addMenu(QMenu* menu, const QPoint& offset);
+    void setBtnText(QToolButton* btn, const QString& text);
     QToolButton* addAction(const QString& text, const QPoint& offset, std::function<void(void)> todo);
     QLabel* addLabelTip(QToolButton* target, const QString& text = "", TipAlign align = UP, int margin = 4);
     void setLabelTip(QToolButton* target, QLabel* label, const QString& text, TipAlign align, int margin = 4);

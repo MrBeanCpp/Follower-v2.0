@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <windows.h>
 #include <QScreen>
+#include <Utils/keystate.h>
 ToolMenu::ToolMenu(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ToolMenu)
@@ -20,7 +21,21 @@ ToolMenu::ToolMenu(QWidget *parent) :
     timer->callOnTimeout([=](){
         if(qApp->focusWidget() == nullptr) //焦点离开本程序后关闭
             this->close();
+
+        KeyState::clearLock();
+        if(KeyState::isRelease(VK_MBUTTON)){ //有时qApp检测不到中键松开（比如划过btn开启Menu，再移开关闭Menu后，将鼠标移出窗体）
+            QMouseEvent event(QEvent::MouseButtonRelease, QPointF(), Qt::MidButton, Qt::MidButton, Qt::NoModifier);
+            qApp->sendEvent(this, &event); //同步，执行任意一个event后，close，不会重复处理event
+            return;
+        }
+
         QWidget* wgt = qApp->widgetAt(QCursor::pos());
+
+        if(!wgt || wgt->inherits("ToolMenu")){ //鼠标离开时关闭Menu ToolMenu为托底透明层 nullptr为窗体外
+            for(auto btn: qAsConst(btnMenuList))
+                btn->menu()->close();
+        }
+
         if(wgt && wgt->inherits("QToolButton")){ //wgt->metaObject()->className() == QStringLiteral("QToolButton")
             QToolButton* btn = static_cast<QToolButton*>(wgt);
             btn->setStyleSheet("background-color:rgb(29,84,92);");
@@ -48,8 +63,17 @@ QToolButton* ToolMenu::addMenu(QMenu *menu, const QPoint &offset)
     //}
     btn->setText(menu->title());
     btn->adjustSize(); //很重要 否则size不正确
-    setCenter(btn, rect().center() + offset);
+    setCenter(btn, this->rect().center() + offset);
     return btn;
+}
+
+void ToolMenu::setBtnText(QToolButton *btn, const QString &text)
+{
+    Q_ASSERT(btn);
+    QPoint offset = btn->geometry().center(); //可以直接获取 无需传入参数 省 都可以省
+    btn->setText(text);
+    btn->adjustSize(); //很重要 否则size不正确
+    setCenter(btn, this->rect().center() + offset);
 }
 
 QToolButton* ToolMenu::addAction(const QString &text, const QPoint &offset, std::function<void ()> todo)
@@ -105,6 +129,7 @@ bool ToolMenu::eventFilter(QObject *watched, QEvent *event)
     if((event->type() == QEvent::MouseButtonRelease) ||
         (event->type() == QEvent::KeyRelease && static_cast<QKeyEvent*>(event)->key() == Qt::Key_Shift)){
 
+        qDebug() << "#about to close tMenu:" << watched << event;
         QWidget* wgt = qApp->widgetAt(QCursor::pos());
         if(wgt && wgt->inherits("QMenu")){
             QMenu* menu = static_cast<QMenu*>(wgt);

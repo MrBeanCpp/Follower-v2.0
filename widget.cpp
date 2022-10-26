@@ -574,7 +574,11 @@ void Widget::Init_ToolMenu()
     });
     tMenu->addLabelTip(btn_quit, "↑⚠️↑", ToolMenu::DOWN, DPI(2));
 
-    auto btn_audio = tMenu->addMenu(sys->sysTray->contextMenu()->findChild<QMenu*>("menu_audio"), DPI(QPoint(100, 0))); //复用代码~
+    tMenu->addAction("🔕", DPI(QPoint(110, -45)), [=](){
+        Win::simulateKeyEvent(QList<BYTE>{ VK_VOLUME_MUTE });
+    });
+
+    auto btn_audio = tMenu->addMenu(sys->sysTray->contextMenu()->findChild<QMenu*>("menu_audio"), DPI(QPoint(110, 0))); //复用代码~
     auto audio_tip = tMenu->addLabelTip(btn_audio);
 
     connect(tMenu, &ToolMenu::showed, this, [=](){
