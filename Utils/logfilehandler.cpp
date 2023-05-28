@@ -40,8 +40,8 @@ void LogFileHandler::outputMessage(QtMsgType type, const QMessageLogContext &con
     }
 
     // 设置输出信息格式
-    QString strDateTime = QTime::currentTime().toString("HH:mm:ss");
-    QString strMessage = QString("%1:%2 %3").arg(strDateTime, text, msg);
+    QString strDateTime = QTime::currentTime().toString("HH:mm:ss.zzz");
+    QString strMessage = QString("%1 %2 %3").arg(strDateTime, text, msg);
     // 输出信息至文件中（读写、追加形式）
     //必须确保目录存在（构造函数）
     QString filePath = QApplication::applicationDirPath() + dir + "/" + QDateTime::currentDateTime().toString("yyyy-MM-dd").append("-log.txt");

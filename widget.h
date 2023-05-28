@@ -80,6 +80,7 @@ private:
     TimeClipboard tClip {128}; //记录textChangeTime的ClipBoard
     QTimer* timer_audioTip = nullptr;
     HPOWERNOTIFY hPowerNotify = NULL; //睡眠休眠通知注册句柄
+    HPOWERNOTIFY hPowerSetting = NULL; //显示器电源设置通知
     bool isHideAfterExecute = true;
     //QString audioOuptputDev = Win::activeAudioOutputDevice(); //缓存 避免paintEvent频繁获取 //首次获取会卡顿可能是载入dll 所以放这儿
     AudioDevice audioOuptputDev = AudioDevice::defaultOutputDevice();
@@ -88,6 +89,8 @@ private:
     ToolMenu* tMenu = nullptr;
     QMap<Qt::MouseButton, LongPressState> isMBLongPressed;
     static constexpr int LPDelay = 180; //ms Long Press Dealy
+
+    bool isScreenOn = true;
 
 private:
     inline bool moveGuide(QPoint dest, QPointF& pos, qreal speed, qreal limit = 10);

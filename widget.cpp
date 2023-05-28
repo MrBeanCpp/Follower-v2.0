@@ -122,6 +122,7 @@ Widget::Widget(QWidget* parent)
     });
 
     hPowerNotify = RegisterSuspendResumeNotification(Hwnd, DEVICE_NOTIFY_WINDOW_HANDLE); //注册睡眠/休眠消息
+    hPowerSetting = RegisterPowerSettingNotification(Hwnd, &GUID_MONITOR_POWER_ON, DEVICE_NOTIFY_WINDOW_HANDLE); // 注册显示器电源设置通知
 
     connect(this, &Widget::powerSwitched, this, [=](bool isPowerOn, bool force) {
         qDebug() << "#Power:" << isPowerOn;
@@ -650,6 +651,7 @@ void Widget::mousePressEvent(QMouseEvent* event)
         timer_move->stop(); //防止鼠标滑出，进入MOVE状态
     }else if(isState(STILL) && button == Qt::MiddleButton){
         isMBLongPressed[button] = Ready;
+        qDebug() << "MButton Press";
         QTimer::singleShot(LPDelay, this, [=](){
             if(isMBLongPressed[button] != Ready)return;
             timer_move->stop();
@@ -681,6 +683,7 @@ void Widget::mouseReleaseEvent(QMouseEvent* event)
          auto button = event->button();
         if (button == Qt::MidButton && isMBLongPressed[button] == Ready){ //防止Done
             isMBLongPressed[button] = Cancel;
+            qDebug() << "MButton Release";
             switchAudioOutputDevice(AudioDevice(), true);
         }
         else if (button == Qt::ForwardButton)
@@ -724,10 +727,19 @@ bool Widget::nativeEvent(const QByteArray& eventType, void* message, long* resul
             qDebug() << "#Resume from sleep | hibernate";
             sys->sysTray->showMessage("Power Tip", "#Resume from sleep | hibernate");
             timer_move->start(); //防止休眠后 timer_move 无响应
-            emit powerSwitched(Win::isPowerOn(), true); //休眠恢复中 setReflashRate可能失败 所以恢复后 再次执行
+            //emit powerSwitched(Win::isPowerOn(), true); //休眠恢复中 setReflashRate可能失败 所以恢复后 再次执行
         }else if(msg->wParam == PBT_APMPOWERSTATUSCHANGE){ //检测通断电 or 电量变化 具体需要手动检测
             qDebug() << "#PowerStatusChanged";
-            emit powerSwitched(Win::isPowerOn());
+            if(isScreenOn) //息屏时操作屏幕可能导致问题
+                emit powerSwitched(Win::isPowerOn());
+        }else if(msg->wParam == PBT_POWERSETTINGCHANGE){ //需要使用RegisterPowerSettingNotification注册后才行
+            POWERBROADCAST_SETTING* pbs = (POWERBROADCAST_SETTING*)(msg->lParam);
+            if (pbs->PowerSetting == GUID_MONITOR_POWER_ON){ // 显示器的电源设置（息屏/亮屏）
+                isScreenOn = *(pbs->Data); // 获取显示器的电源状态
+                qDebug() << "#PowerSettingChange: Screen Power:" << isScreenOn;
+                if(isScreenOn)
+                    emit powerSwitched(Win::isPowerOn()); //休眠恢复中 setReflashRate可能失败 故等待亮屏再操作
+            }
         }
     }
     return false; //此处返回false，留给其他事件处理器处理
@@ -738,6 +750,7 @@ void Widget::closeEvent(QCloseEvent* event)
     Q_UNUSED(event)
     Win::unregisterHotKey(Atom, HotKeyId, Hwnd);
     UnregisterSuspendResumeNotification(hPowerNotify);
+    UnregisterPowerSettingNotification(hPowerSetting);
 }
 
 void Widget::keyPressEvent(QKeyEvent* event)

@@ -20,6 +20,12 @@ KeyState::State KeyState::state(int vKey, int releaseLimit)
         res = nowState == Uping ? Release : Press;
     }
 
+//    if(res == Press && vKey == VK_MBUTTON)
+//        qDebug() << "MB Press" << (pastState == Uping) << (nowState == Downing);
+
+//    if(res == Release && vKey == VK_MBUTTON)
+//        qDebug() << "MB Release" << (pastState == Downing) << (nowState == Uping);
+
     lockList.insert({ vKey, res });
     return checkReleaseLimit(vKey, res, releaseLimit);
 }
