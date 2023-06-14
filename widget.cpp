@@ -134,15 +134,15 @@ Widget::Widget(QWidget* parent)
             bool ret = Win::setScreenReflashRate(rate);
             if(!ret && retry)
                 QTimer::singleShot(gap, this, [=](){
-                    qDebug() << "#retrying set Reflash Rate" << rate;
-                    sys->sysTray->showMessage("Reflash Rate", "Retrying to set Refalsh Rate");
+                    qDebug() << "#!Retrying set Reflash Rate" << rate;
+                    sys->sysTray->showMessage("Reflash Rate", "!Retrying to set Refalsh Rate");
                     setScreenReflashRate(rate, retry, gap);
                 });
         };
 
         if (force || hasPower != isPowerOn) {
             sys->sysTray->showMessage("Little Tip", isPowerOn ? "Power Up" : "Power Down");
-            setScreenReflashRate(screenSetting.reflash[isPowerOn], force, 1000); //休眠恢复中可能更改不生效 故建立重试机制
+            setScreenReflashRate(screenSetting.reflash[isPowerOn], true, 1000); //休眠恢复中可能更改不生效 故建立重试机制
             Win::setBrightness(screenSetting.brightness[isPowerOn]);
         }
         hasPower = isPowerOn;
