@@ -827,3 +827,6 @@
 5-29：
     setScreenReflashRate改为默认开启重试，不与force变量关联
     ScreenOn，亮屏时，不force改变亮度，而是与通断电状态是否改变相关；否则本程序不会改变亮度，也就没必要改回来（用户自己调整的，我们不管）
+
+7-14：
+    Executor::isExistPath: 增加绝对路径判断，否则可能查询系统目录（如 Windows\System32） while 输入ja -> "C:\Windows\System32\ja"

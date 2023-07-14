@@ -147,8 +147,12 @@ QString Executor::cleanPath(QString path)
 
 bool Executor::isExistPath(const QString& str)
 {
+    static auto isAbsolutePath = [](const QString& str)->bool {
+        static QRegularExpression regex("^[A-Za-z]:[/\\\\]"); // '/' or '\\'
+        return regex.match(str).hasMatch();
+    };
     QString _str = cleanPath(str);
-    return QFileInfo::exists(_str);
+    return QFileInfo::exists(_str) && isAbsolutePath(_str); //增加绝对路径判断，否则可能查询系统目录（如 Windows\System32 (\ja)）
 }
 
 Executor::State Executor::run(const QString& code, bool isWithExtra)
