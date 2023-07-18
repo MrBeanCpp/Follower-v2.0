@@ -830,3 +830,7 @@
 
 7-14：
     Executor::isExistPath: 增加绝对路径判断，否则可能查询系统目录（如 Windows\System32） while 输入ja -> "C:\Windows\System32\ja"
+
+7-18：
+    咳咳 其实判断是否是绝对路径只需要"A-Za-z" + ':'即可 在这里 不需要斜杠
+    否则将导致快捷输入"D:"无法定位到"D:\", 毕竟cmd是支持的

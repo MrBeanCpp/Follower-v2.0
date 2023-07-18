@@ -148,7 +148,7 @@ QString Executor::cleanPath(QString path)
 bool Executor::isExistPath(const QString& str)
 {
     static auto isAbsolutePath = [](const QString& str)->bool {
-        static QRegularExpression regex("^[A-Za-z]:[/\\\\]"); // '/' or '\\'
+        static QRegularExpression regex("^[A-Za-z]:"); //no need for '\\' or '/' ; for fast input D:
         return regex.match(str).hasMatch();
     };
     QString _str = cleanPath(str);
