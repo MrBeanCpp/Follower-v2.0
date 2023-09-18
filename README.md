@@ -9,6 +9,10 @@
 
 ![Move](https://s1.ax1x.com/2022/05/23/X9uXdK.png)  ![Still](https://s1.ax1x.com/2022/05/23/X9KiLt.png)  ![Input](https://s1.ax1x.com/2022/05/23/X9KeJg.png)
 
+### 代码仓库
+
+[Gitee](https://gitee.com/mrbeanc/follower-v2.0) & [Github](https://github.com/MrBeanCpp/Follower-v2.0/tree/v2.14.7)
+
 ## 详细介绍
 
 ### 命令分类
