@@ -58,6 +58,10 @@ void Request::translate(const QString& text, std::function<void(const QString&)>
     connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
     connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
+    // 局部事件循环可能有问题，试想：push Button发送一次请求，那么进入局部循环后再发送一次就会再嵌套一个局部循环
+    // 那么就算外部的this循环超时了，也不能退出，得等最深的循环退出才可（参考递归与回溯）
+    // 故换用其他方案，如定时abort https://blog.csdn.net/weixin_40774605/article/details/110007462
+    // 貌似Qt5.15引入了：QNetworkRequest::setTransferTimeout ！
 
     if (timer.isActive()) { //normal
         timer.stop();

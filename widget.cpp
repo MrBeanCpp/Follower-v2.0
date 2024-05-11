@@ -244,7 +244,8 @@ void Widget::updateWindow()
     switch (state) {
     case MOVE:
         isTeleport = false;
-        if (KeyState::isRelease(VK_MBUTTON, 500) && teleportMode != OFF) {
+        // 1. 500ms内释放中键，防止用户意图为在浏览器内长按触发滚动；2. 光标形状不为HAND时触发，防止意图为后台打开链接（浏览器）
+        if (KeyState::isRelease(VK_MBUTTON, 500) && !Win::testGlobalCursorShape(IDC_HAND)) {
             if (teleportMode == ON || (teleportMode == AUTO && !Win::isForeFullScreen()))
                 teleport(), isTeleport = true;
         } else if (isTeleportKey()) { //键盘快捷键无视全屏

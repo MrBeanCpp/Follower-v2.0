@@ -22,7 +22,7 @@ SystemAPI::SystemAPI(QObject* parent)
 { //need a function to delete these pointers(InputMethod is not a QObject but it Can be)//或者采用shared_ptr调用SystemAPI析构
     if (sys != nullptr) {
         qDebug() << "SystemAPI multi defined"; //只允许有一个对象
-        QTimer::singleShot(0, [=]() { qApp->quit(); }); //等待进入事件循环
+        QTimer::singleShot(0, this, [=]() { qApp->quit(); }); //等待进入事件循环
         return;
     }
     sys = this;

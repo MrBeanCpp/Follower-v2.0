@@ -39,6 +39,7 @@ public:
     static bool setScreenReflashRate(int rate);
     static DWORD getCurrentScreenReflashRate(void);
     static QSet<DWORD> getAvailableScreenReflashRates(void);
+    static bool testGlobalCursorShape(LPCWSTR cursorID);
 };
 
 #endif // WIN_H

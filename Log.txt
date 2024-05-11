@@ -837,3 +837,17 @@
 
 9-18：
     啊没什么 就是新增多仓库同步push 测试一下
+
+9-25：
+    with MSVC编译器，之前提到使用QAudioDeviceInfo::availableDevices(QAudio::AudioInput);会有卡顿和输出同名设备的问题
+    解决方案是：plugins/audio下 删除 qtaudio_wasapi.dll
+    但是改用Windows API之后，就没有这个问题了，所以可以恢复过来（其他项目需要依赖）
+    https://blog.csdn.net/m0_52040845/article/details/118761684
+
+##2024:
+3-7:
+    BUG：关于启动Follower后，首次输入命令会卡顿的问题，可能是UI渲染导致的？ 但是更新Qt后重新编译，感觉没问题了？（Or错觉，先观察几天）
+
+5-11:
+    improve：按中间Teleport前，会检测当前鼠标光标形状，如果为Hand，则不Teleport，因为中键点击链接可以在后台打开页面（浏览器），此时不应弹出Follower
+    而且，光标为Hand，基本意味着可以点击，此时也不应该弹出Follower

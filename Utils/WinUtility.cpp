@@ -281,3 +281,18 @@ QSet<DWORD> Win::getAvailableScreenReflashRates()
         list << lpDevMode.dmDisplayFrequency;
     return list;
 }
+
+/// 测试全局光标形状
+/// - 因为Qt的cursor::shape()只能检测本程序窗口
+/// - ref: https://bbs.csdn.net/topics/392329000
+bool Win::testGlobalCursorShape(LPCWSTR cursorID)
+{
+    CURSORINFO info;
+    info.cbSize = sizeof(CURSORINFO); // 必需
+    GetCursorInfo(&info);
+    if (info.flags != CURSOR_SHOWING) return false; // 光标隐藏时，hCurosr为NULL
+    // Windows API 没有直接获取光标形状的函数，只能通过比较光标句柄
+    // LoadCursor [arg0:NULL] 意为加载预定义的系统游标
+    // 原理：仅当游标资源尚未加载时，LoadCursor 函数才会加载游标资源; 否则，它将检索现有资源的句柄
+    return info.hCursor == LoadCursor(NULL, cursorID);
+}
