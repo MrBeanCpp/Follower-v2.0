@@ -7,6 +7,7 @@
 #include <QUrl>
 #include <windows.h>
 #include <QMessageBox>
+#include "Utils/util.h"
 
 Executor::Executor(QObject* parent)
     : QObject(parent)
@@ -170,9 +171,12 @@ Executor::State Executor::run(const QString& code, bool isWithExtra)
         return TRANSLATE;
     }
 
-    if (isExistPath(code)) {
-        openFile(code);
-        return PATH;
+    if (Util::maybePath(code)) { // 路径和命令的匹配是互斥的，疑似路径后，不再匹配命令，因为UI不会再显示命令候选
+        if (isExistPath(code)) {
+            openFile(code);
+            return PATH;
+        }
+        return NOCODE;
     }
 
     auto iter = std::find_if(cmdList.begin(), cmdList.end(), [=](const Command& cmd) { //模糊匹配

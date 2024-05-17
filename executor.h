@@ -103,6 +103,7 @@ private:
     inline CmdSymbol symbol(const QString& str);
     void clearText(void);
     QString cleanPath(QString path); //去掉双引号
+     //存在且是绝对路径
     bool isExistPath(const QString& str);
 
 signals:

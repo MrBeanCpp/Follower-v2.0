@@ -67,8 +67,8 @@ public:
     explicit CodeEditor(int width, int height, QWidget* parent = nullptr);
     friend class Widget;
 signals:
-    void reportResize(int width, int height); //-1 means Automatic
     //只报告自身内部Size，不理睬主窗体Margin(所谓，两耳不闻窗外事)
+    void reportResize(int width, int height); //-1 means Automatic
     void returnWithoutEcho(bool noHide = false); //按下回车，且无回显的Text
 
 private:
