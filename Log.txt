@@ -855,3 +855,8 @@
 5-18：
     fix：输入的text如果疑似路径，则executor中不再进行命令的匹配，与UI保持一致（不显示cmdlist），防止迷惑
     至于为什么要使路径和命令互斥，有多个原因：1. 需要适时开启路径补全 2. 两者界限明确 很好区分
+
+5-29：
+    improve：当鼠标下为TabStrip（浏览器标签页）时，中键不唤出，此时浏览器的行为是关闭标签；
+        目前支持：Edge、Chrome
+    顺便fix：`Win::getWindowClass`中的buffer不要用static，防止获取失败后返回上一次的值

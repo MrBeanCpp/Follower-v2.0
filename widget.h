@@ -117,6 +117,8 @@ private:
     void switchAudioOutputDevice(const AudioDevice& dev, bool toPre = false);
     void minimize(void);
     void Init_ToolMenu(void);
+    // 判断鼠标下方的是否是浏览器标签栏，目前仅支持Edge、Chrome
+    bool isTabStripUnderCursor(void); // 中键点击标签栏，一般是关闭标签操作
 
 signals:
     void powerSwitched(bool isPowerOn, bool force = false);

@@ -23,6 +23,8 @@
 #include <QToolTip>
 #include "updateform.h"
 #include "shortcutdia.h"
+#include "Utils/uiautomation.h"
+
 #define GetKey(X) (GetAsyncKeyState(X) & 0x8000)
 Widget::Widget(QWidget* parent)
     : QWidget(parent), ui(new Ui::Widget)
@@ -151,6 +153,11 @@ Widget::Widget(QWidget* parent)
         emit powerSwitched(Win::isPowerOn(), true); //开机调整
     });
 
+    connect(qApp, &QApplication::aboutToQuit, this, [=]() {
+        qDebug() << "#aboutToQuit";
+        UIAutomation::cleanup();
+    });
+
     Init_ToolMenu();
 }
 
@@ -245,7 +252,7 @@ void Widget::updateWindow()
     case MOVE:
         isTeleport = false;
         // 1. 500ms内释放中键，防止用户意图为在浏览器内长按触发滚动；2. 光标形状不为HAND时触发，防止意图为后台打开链接（浏览器）
-        if (KeyState::isRelease(VK_MBUTTON, 500) && !Win::testGlobalCursorShape(IDC_HAND)) {
+        if (KeyState::isRelease(VK_MBUTTON, 500) && !Win::testGlobalCursorShape(IDC_HAND) && !isTabStripUnderCursor()) {
             if (teleportMode == ON || (teleportMode == AUTO && !Win::isForeFullScreen()))
                 teleport(), isTeleport = true;
         } else if (isTeleportKey()) { //键盘快捷键无视全屏
@@ -586,6 +593,27 @@ void Widget::Init_ToolMenu()
     connect(tMenu, &ToolMenu::showed, this, [=](){
         tMenu->setLabelTip(btn_audio, audio_tip, AudioDevice::defaultOutputDevice().name, ToolMenu::UP, DPI(4));
     });
+}
+
+bool Widget::isTabStripUnderCursor()
+{
+    UIElement el = UIAutomation::getElementUnderMouse();
+    if (el.getControlType() != UIA_PaneControlTypeId)
+        return false;
+    QString className = el.getClassName();
+    if (className == "TabStrip::EdgeTabDragContextImpl") // Edge
+        return true;
+
+    QString windowClass = el.getSelfOrParentNativeWindowClass();
+    if (windowClass == "Chrome_WidgetWin_1") { // Chrome
+        QRect rect = el.getBoundingRect();
+        UIElement parent = UIAutomation::getParentWithHWND(el);
+        // 非全屏时TabStrip的相对y坐标是0；注意：全屏的时候，父窗口的top是-8
+        if (rect.top() == parent.getBoundingRect().top() || rect.top() == 0)
+            return true;
+    }
+
+    return false;
 }
 
 void Widget::paintEvent(QPaintEvent* event)

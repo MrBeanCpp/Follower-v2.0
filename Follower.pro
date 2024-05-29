@@ -37,6 +37,7 @@ SOURCES += \
     Utils/request.cpp \
     Utils/systemapi.cpp \
     Utils/timeclipboard.cpp \
+    Utils/uiautomation.cpp \
     Utils/util.cpp \
     cmdlistwidget.cpp \
     codeeditor.cpp \
@@ -67,6 +68,7 @@ HEADERS += \
     Utils/request.h \
     Utils/systemapi.h \
     Utils/timeclipboard.h \
+    Utils/uiautomation.h \
     Utils/util.h \
     cmdlistwidget.h \
     codeeditor.h \

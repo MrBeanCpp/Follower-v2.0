@@ -108,8 +108,9 @@ bool Win::isForeWindow(HWND hwnd)
 
 QString Win::getWindowClass(HWND hwnd)
 {
-    static WCHAR buffer[128];
-    GetClassNameW(hwnd, buffer, _countof(buffer)); //sizeof字节数 会溢出
+    WCHAR buffer[128]; // 不要使用static，防止获取ClassName失败后，返回上一次的值
+    int sz = GetClassNameW(hwnd, buffer, _countof(buffer)); //sizeof字节数 会溢出
+    if (sz == 0) return QString();
     return QString::fromWCharArray(buffer);
 }
 
