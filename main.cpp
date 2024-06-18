@@ -20,6 +20,9 @@ int main(int argc, char* argv[])
     init();
     Widget w;
     w.show();
+
+    qDebug() << "#Version:" << qApp->applicationVersion();
+
     return a.exec();
 }
 void init(void)

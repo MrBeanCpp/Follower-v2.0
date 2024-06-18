@@ -110,3 +110,11 @@ msvc {
     QMAKE_CFLAGS += /utf-8
     QMAKE_CXXFLAGS += /utf-8
 }
+
+# 会自动在build目录下生成.rc文件并链接
+# 版本
+VERSION = 2.15.1
+# 公司名称
+QMAKE_TARGET_COMPANY = "MrBeanC"
+# 文件说明
+QMAKE_TARGET_DESCRIPTION = "Follower 2.0"

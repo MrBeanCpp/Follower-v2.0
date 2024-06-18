@@ -32,12 +32,12 @@ public:
 private:
     Ui::UpdateForm *ui;
     QNetworkAccessManager* manager = nullptr;
-    const QString releaseUrl = "https://gitee.com/mrbeanc/follower-v2.0/releases";
+    const QString releaseUrl = "https://gitee.com/caiqihang2024/follower-v2.0/releases";
 
     QWinTaskbarButton* taskBarBtn = nullptr;
     QWinTaskbarProgress* taskBarProgress = nullptr;
 
-    const QString ver = "v2.15.0";
+    const QString ver = QStringLiteral("v") + qApp->applicationVersion();
 
     // QWidget interface
 protected:
