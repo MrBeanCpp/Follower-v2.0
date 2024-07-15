@@ -31,7 +31,7 @@
 
 输入`#Edit cmd`打开自定义命令编辑窗口（`Ctrl+F`搜索），支持拖拽文件
 
-![Editor](https://s1.ax1x.com/2022/05/23/X9KITf.md.png)
+![CmdEditor](https://s3.bmp.ovh/imgs/2024/07/15/f0e77e95ac041b8e.png)
 
 分为`Code`、`Extra`、`FileName`、`Parameter`四列
 
