@@ -43,15 +43,32 @@ QLineEdit
     color:rgb(255,255,255);
     background-color:rgb(100,100,100);
 }
-QToolButton
-{
-    background-color:rgb(150,150,150);
-    border-style: flat；
+
+QToolButton {
+    background-color: #333333;  /* 背景颜色：深灰色 */
+    border: 2px solid #555555;  /* 边框颜色：稍浅的灰色 */
+    border-radius: 4px;         /* 圆角半径 */
+    color: white;               /* 文字颜色 */
+    font-size: 18px;            /* 字体大小 */
+    padding: 0px;               /* 去掉内边距 */
 }
-QToolButton:hover
-{
-    background-color:rgb(120,120,120);
+
+QToolButton:hover {
+    background-color: #555555;  /* 悬停时的背景颜色：稍浅的灰色 */
+    border: 2px solid #777777;  /* 悬停时的边框颜色：更浅的灰色 */
 }
+
+QToolButton:pressed {
+    background-color: #111111;  /* 按下时的背景颜色：更深的灰色 */
+    border: 2px solid #333333;  /* 按下时的边框颜色：深灰色 */
+}
+
+QToolButton:disabled {
+    background-color: #777777;  /* 禁用时的背景颜色：浅灰色 */
+    border: 2px solid #999999;  /* 禁用时的边框颜色：更浅的灰色 */
+    color: #cccccc;             /* 禁用时的文字颜色：浅灰色 */
+}
+
 QScrollBar::handle
 {
     background: rgb(60,60,60);

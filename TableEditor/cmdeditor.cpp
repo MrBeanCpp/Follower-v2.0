@@ -21,6 +21,26 @@ CmdEditor::CmdEditor(const QString& Path, QWidget* parent)
                                                    << "Extra"
                                                    << "FileName"
                                                    << "Parameter");
+
+    connect(ui->sniper, &Sniper::windowSelectStart, this, [=]() {
+        newLine();
+    });
+
+    connect(ui->sniper, &Sniper::windowHovered, this, [=](const QString& path) {
+        int row = table->currentRow();
+        QString fileName = QFileInfo(path).baseName();
+        table->item(row, 2)->setText(path);
+        table->item(row, 0)->setText(fileName);
+    });
+
+    connect(ui->sniper, &Sniper::windowSelected, this, [=](const QString& path) {
+        int row = table->currentRow();
+        if (table->item(row, 0)->text().isEmpty()) {
+            // delete last row
+            table->removeRow(row);
+        }
+    });
+
     TableEditor::readFile(Path); //in showEvent,构造也要读，否则Executor一开始读不到
 }
 
@@ -62,7 +82,7 @@ void CmdEditor::keyPressEvent(QKeyEvent* event)
         d->setInputMode(QInputDialog::TextInput);
 
         static auto searchText = [=](const QString& text) {
-            auto list = table->findItems(text, Qt::MatchContains);
+            const auto list = table->findItems(text, Qt::MatchContains);
             int rows = table->rowCount();
             for (int i = 0; i < rows; i++)
                 table->setRowHidden(i, true);

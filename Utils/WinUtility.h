@@ -19,6 +19,7 @@ public:
     static void miniAndShow(HWND hwnd); //最小化然后弹出以获取焦点
     static DWORD getProcessID(HWND hwnd);
     static QString getProcessName(HWND hwnd);
+    static QString getProcessExePath(HWND hwnd);
     static void getInputFocus(HWND hwnd);
     static void simulateKeyEvent(const QList<BYTE>& keys);
     static bool isForeWindow(HWND hwnd);

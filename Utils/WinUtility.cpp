@@ -70,6 +70,29 @@ QString Win::getProcessName(HWND hwnd)
     return pathS.mid(pathS.lastIndexOf('\\') + 1);
 }
 
+QString Win::getProcessExePath(HWND hwnd)
+{
+    DWORD processId = 0;
+    GetWindowThreadProcessId(hwnd, &processId);
+
+    if (processId == 0)
+        return "";
+
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
+    if (hProcess == NULL)
+        return "";
+
+    TCHAR processName[MAX_PATH] = TEXT("<unknown>");
+    // https://www.cnblogs.com/mooooonlight/p/14491399.html
+    if (GetModuleFileNameEx(hProcess, NULL, processName, MAX_PATH)) {
+        CloseHandle(hProcess);
+        return QString::fromWCharArray(processName);
+    }
+
+    CloseHandle(hProcess);
+    return "";
+}
+
 void Win::getInputFocus(HWND hwnd)
 {
     HWND foreHwnd = GetForegroundWindow();

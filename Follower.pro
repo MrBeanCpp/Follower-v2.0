@@ -35,6 +35,7 @@ SOURCES += \
     Utils/logfilehandler.cpp \
     Utils/path.cpp \
     Utils/request.cpp \
+    Utils/sniper.cpp \
     Utils/systemapi.cpp \
     Utils/timeclipboard.cpp \
     Utils/uiautomation.cpp \
@@ -66,6 +67,7 @@ HEADERS += \
     Utils/logfilehandler.h \
     Utils/path.h \
     Utils/request.h \
+    Utils/sniper.h \
     Utils/systemapi.h \
     Utils/timeclipboard.h \
     Utils/uiautomation.h \
@@ -80,6 +82,7 @@ HEADERS += \
     widget.h
 
 FORMS += \
+    Utils/sniper.ui \
     powersettingdia.ui \
     shortcutdia.ui \
     tablebase.ui \
@@ -113,7 +116,7 @@ msvc {
 
 # 会自动在build目录下生成.rc文件并链接
 # 版本
-VERSION = 2.15.1
+VERSION = 2.15.2
 # 公司名称
 QMAKE_TARGET_COMPANY = "MrBeanC"
 # 文件说明

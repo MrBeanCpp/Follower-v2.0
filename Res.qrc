@@ -3,5 +3,8 @@
         <file>tableStyle.qss</file>
         <file>images/web.png</file>
         <file>images/ICON.ico</file>
+        <file>images/aimer.png</file>
+        <file>images/Window-blank.png</file>
+        <file>images/Window-aimer.png</file>
     </qresource>
 </RCC>
